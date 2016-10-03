@@ -11,6 +11,7 @@ import schema from './schema/index'
 const app = koa()
 const router = koaRouter()
 
+
 router.get('/graphql', graphiql({
   css: '/graphiql.css',
   js: '/graphiql.js'
@@ -23,6 +24,8 @@ router.post('/graphql', graphqlHTTP({
     return e
   }
 }))
+
+router.redirect('/', '/graphql')
 
 app.use(router.routes())
 // serve the custom build of GraphiQL
