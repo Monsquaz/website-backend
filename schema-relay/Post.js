@@ -20,6 +20,7 @@ export const Post = new GraphQLObjectType({
   name: 'Post',
   sqlTable: 'posts',
   uniqueKey: 'id',
+  // also implements the node interface
   interfaces: [ nodeInterface ],
   fields: () => ({
     id: {
@@ -37,6 +38,7 @@ export const Post = new GraphQLObjectType({
     },
     comments: {
       description: 'The comments on this post',
+      // a nested connection
       type: CommentConnection,
       args: connectionArgs,
       resolve: (post, args) => {
@@ -47,6 +49,7 @@ export const Post = new GraphQLObjectType({
   })
 })
 
+// create the connection type from the post
 const { connectionType: PostConnection } = connectionDefinitions({ nodeType: Post })
 export { PostConnection }
 

@@ -6,7 +6,8 @@ import {
   GraphQLInt
 } from 'graphql'
 
-const dataFilePath = path.join(__dirname, '../data', process.env.NODE_ENV === 'test' ? 'test-data.sl3' : 'demo-data.sl3')
+// connect to our database file
+const dataFilePath = path.join(__dirname, '../data/demo-data.sl3')
 const knex = require('knex')({
   client: 'sqlite3',
   connection: {
@@ -29,8 +30,9 @@ export default new GraphQLObjectType({
     users: {
       type: new GraphQLList(User),
       resolve: (parent, args, context, ast) => {
+        // joinMonster with handle batching all the data fetching for the users and it's children. Determines everything it needs to from the "ast", which includes the parsed GraphQL query AST and your schema definition
         return joinMonster(ast, context, sql => {
-          // place the SQL query in the response headers. ONLY for debugging. Don't do this in production
+          // place the SQL query in the response headers for GraphsiQL. ONLY for debugging. Don't do this in production
           if (context) {
             context.set('X-SQL-Preview', sql.replace(/\n/g, '%0A'))
           }
@@ -46,6 +48,7 @@ export default new GraphQLObjectType({
           type: GraphQLInt
         }
       },
+      // this functino generates the WHERE condition
       where: (usersTable, args, context) => { // eslint-disable-line no-unused-vars
         if (args.id) return `${usersTable}.id = ${args.id}`
       },

@@ -18,6 +18,7 @@ export default new GraphQLObjectType({
       type: GraphQLString,
       resolve: () => joinMonster.version
     },
+    // implement the Node type from Relay spec
     node: nodeField,
     users: {
       type: new GraphQLList(User),

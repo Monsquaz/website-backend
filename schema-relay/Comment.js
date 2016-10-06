@@ -17,6 +17,7 @@ export const Comment = new GraphQLObjectType({
   name: 'Comment',
   sqlTable: 'comments',
   uniqueKey: 'id',
+  // also implements the node interface
   interfaces: [ nodeInterface ],
   fields: () => ({
     id: {
@@ -40,5 +41,6 @@ export const Comment = new GraphQLObjectType({
   })
 })
 
+// create a connection type from the Comment type
 const { connectionType: CommentConnection } = connectionDefinitions({ nodeType: Comment })
 export { CommentConnection }

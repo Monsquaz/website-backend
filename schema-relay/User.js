@@ -21,11 +21,13 @@ const User = new GraphQLObjectType({
   name: 'User',
   sqlTable: 'accounts',
   uniqueKey: 'id',
+  // This implements the node interface
   interfaces: [ nodeInterface ],
   fields: () => ({
     id: {
       description: 'The global ID for the Relay spec',
-      ...globalIdField('User'),
+      // all the resolver for the globalId needs is the id property
+      ...globalIdField(),
       sqlDeps: [ 'id' ]
     },
     email: {
@@ -40,15 +42,19 @@ const User = new GraphQLObjectType({
     },
     comments: {
       description: 'Comments the user has written on people\'s posts',
+      // this is now a connection type
       type: CommentConnection,
       args: connectionArgs,
+      // comments comes in as an array, lets turn that into a connection
       resolve: (user, args) => {
         return connectionFromArray(user.comments, args)
       },
+      // join is the same as before
       sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id`
     },
     posts: {
       description: 'A list of Posts the user has written',
+      // a Post connection as well
       type: PostConnection, 
       args: connectionArgs,
       resolve: (user, args) => {
@@ -73,12 +79,6 @@ const User = new GraphQLObjectType({
       description: 'How many legs this user has',
       type: GraphQLInt,
       sqlColumn: 'num_legs'
-    },
-    numFeet: {
-      description: 'How many feet this user has',
-      type: GraphQLInt,
-      sqlDeps: [ 'num_legs' ],
-      resolve: user => user.num_legs
     }
   })
 })
