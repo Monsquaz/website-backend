@@ -17,7 +17,12 @@ const { nodeInterface, nodeField } = nodeDefinitions(
     // also need to pass it the type name and a where function
     return joinMonster.getNode(type, ast, context,
       table => `${table}.id = ${id}`,
-      sql => knex.raw(sql)
+      sql => {
+        if (context) {
+          context.set('X-SQL-Preview', sql.replace(/\n/g, '%0A'))
+        }
+        return knex.raw(sql)
+      }
     )
   },
   // this function determines the type. `joinMonster` figures it out for you and attaches the type to the result in the "__type__" property
