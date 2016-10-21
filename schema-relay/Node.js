@@ -7,6 +7,8 @@ import joinMonster from 'join-monster'
 
 import knex from './database'
 
+const options = { dialect: 'pg' }
+
 // create the node type and interface
 const { nodeInterface, nodeField } = nodeDefinitions(
   // this function resolves an ID to an object
@@ -22,7 +24,8 @@ const { nodeInterface, nodeField } = nodeDefinitions(
           context.set('X-SQL-Preview', sql.replace(/\n/g, '%0A'))
         }
         return knex.raw(sql)
-      }
+      },
+      options
     )
   },
   // this function determines the type. `joinMonster` figures it out for you and attaches the type to the result in the "__type__" property
