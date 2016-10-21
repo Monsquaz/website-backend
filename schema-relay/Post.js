@@ -1,6 +1,7 @@
 import {
   GraphQLObjectType,
-  GraphQLString
+  GraphQLString,
+  GraphQLInt
 } from 'graphql'
 
 import {
@@ -27,6 +28,10 @@ export const Post = new GraphQLObjectType({
       ...globalIdField(),
       sqlDeps: [ 'id' ]
     },
+    clearId: {
+      type: GraphQLInt,
+      sqlColumn: 'id'
+    },
     body: {
       description: 'The content of the post',
       type: GraphQLString
@@ -41,8 +46,9 @@ export const Post = new GraphQLObjectType({
       // a nested connection
       type: CommentConnection,
       args: connectionArgs,
-      resolve: (post, args) => {
-        return connectionFromArray(post.comments, args)
+      sqlPaginate: true,
+      orderBy: {
+        id: 'desc'
       },
       sqlJoin: (postTable, commentTable) => `${postTable}.id = ${commentTable}.post_id`
     }

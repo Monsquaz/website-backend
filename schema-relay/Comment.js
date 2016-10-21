@@ -1,6 +1,7 @@
 import {
   GraphQLObjectType,
-  GraphQLString
+  GraphQLString,
+  GraphQLInt
 } from 'graphql'
 
 import {
@@ -23,6 +24,10 @@ export const Comment = new GraphQLObjectType({
     id: {
       ...globalIdField(),
       sqlDeps: [ 'id' ]
+    },
+    clearId: {
+      type: GraphQLInt,
+      sqlColumn: 'id'
     },
     body: {
       description: 'The content of the comment',

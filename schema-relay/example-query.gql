@@ -6,7 +6,6 @@
     posts {
       pageInfo {
         hasNextPage
-        hasPreviousPage
         startCursor
         endCursor
       }
