@@ -12,12 +12,12 @@ const options = { dialect: 'pg' }
 // create the node type and interface
 const { nodeInterface, nodeField } = nodeDefinitions(
   // this function resolves an ID to an object
-  (globalId, context, ast) => {
+  (globalId, context, resolveInfo) => {
     // parse the globalID
     const { type, id } = fromGlobalId(globalId)
     // helper method for getting Nodes from the DB, similar to the parent function.
     // also need to pass it the type name and a where function
-    return joinMonster.getNode(type, ast, context,
+    return joinMonster.getNode(type, resolveInfo, context,
       table => `${table}.id = ${id}`,
       sql => {
         if (context) {

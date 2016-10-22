@@ -33,8 +33,8 @@ export default new GraphQLObjectType({
       where: (usersTable, args, context) => { // eslint-disable-line no-unused-vars
         if (args.id) return `${usersTable}.id = ${args.id}`
       },
-      resolve: (parent, args, context, ast) => {
-        return joinMonster(ast, context, sql => {
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, context, sql => {
           if (context) {
             context.set('X-SQL-Preview', sql.replace(/\n/g, '%0A'))
           }
