@@ -1,0 +1,1 @@
+Monsquaz Website GraphQL API
