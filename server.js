@@ -5,13 +5,15 @@ import graphqlHTTP from 'koa-graphql'
 // module we created that lets you serve a custom build of GraphiQL
 import graphiql from 'koa-custom-graphiql'
 import koaStatic from 'koa-static'
+import cors from 'koa-cors'
 
 import schemaBasic from './schema-basic/index'
-import schemaRelay from './schema-relay/index'
+import schemaRelay from './schema-paginated/index'
 
 const app = koa()
 const router = koaRouter()
 
+app.use(cors())
 
 router.get('/graphql', graphiql({
   css: '/graphiql.css',
@@ -43,8 +45,10 @@ router.post('/graphql-relay', graphqlHTTP({
 router.redirect('/', '/graphql')
 
 app.use(router.routes())
+app.use(router.allowedMethods())
 // serve the custom build of GraphiQL
 app.use(koaStatic(path.join(__dirname, 'node_modules/graphsiql')))
 
 const port = process.env.PORT || 3000
-app.listen(port, () => console.log(`server listening at http://localhost:${port}/graphql`))
+app.listen(port, () => console.log(`server listening at http://localhost:${port}/graphql && http://localhost:${port}/graphql-relay`))
+

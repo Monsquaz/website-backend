@@ -2,7 +2,8 @@ import {
   GraphQLObjectType,
   GraphQLList,
   GraphQLString,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLFloat
 } from 'graphql'
 
 import {
@@ -15,7 +16,7 @@ import Post from './Post'
 const User = new GraphQLObjectType({
   description: 'a stem contract account',
   name: 'User',
-  // tell join monster the name of the table
+  // tell join monster the expression for the table
   sqlTable: 'accounts',
   // one of the columns must be unique for deduplication purposes
   uniqueKey: 'id',
@@ -36,11 +37,6 @@ const User = new GraphQLObjectType({
       // specifies SQL column and applies a custom resolver
       resolve: user => toBase64(user.idEncoded)
     },
-    globalId: {
-      description: 'The global ID for the Relay spec',
-      ...globalIdField('User', user => user.globalId),
-      sqlColumn: 'id'
-    },
     fullName: {
       description: 'A user\'s first and last name',
       type: GraphQLString,
@@ -48,23 +44,30 @@ const User = new GraphQLObjectType({
       sqlDeps: [ 'first_name', 'last_name' ],
       resolve: user => `${user.first_name} ${user.last_name}`
     },
-    comments: {
-      description: 'Comments the user has written on people\'s posts',
-      // has another GraphQLObjectType as a field
-      type: new GraphQLList(Comment),
-      // this function tells join monster how to join these tables
-      sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id`
+    fullNameAnotherWay: {
+      type: GraphQLString,
+      // or you could use a raw SQL expression
+      sqlExpr: table => `${table}.first_name || ' ' || ${table}.last_name`
     },
     posts: {
       description: 'A list of Posts the user has written',
+      // has another GraphQLObjectType as a field
       type: new GraphQLList(Post),
+      // this is a one-to-many relation
+      // this function tells join monster how to join these tables
       sqlJoin: (userTable, postTable) => `${userTable}.id = ${postTable}.author_id`
+    },
+    comments: {
+      description: 'Comments the user has written on people\'s posts',
+      // another one-to-many relation
+      type: new GraphQLList(Comment),
+      sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id AND ${commentTable}.archived = (0 = 1)`
     },
     following: {
       description: 'Users that this user is following',
       type: new GraphQLList(User),
       // many-to-many is supported too, via an intermediate join table
-      joinTable: 'relationships',
+      junctionTable: 'relationships',
       sqlJoins: [
         (followerTable, relationTable) => `${followerTable}.id = ${relationTable}.follower_id`,
         (relationTable, followeeTable) => `${relationTable}.followee_id = ${followeeTable}.id`
@@ -79,6 +82,16 @@ const User = new GraphQLObjectType({
       description: 'How many legs this user has',
       type: GraphQLInt,
       sqlColumn: 'num_legs'
+    },
+    // object types without a `sqlTable` are a no-op. Join Monster will ignore it and let you resolve it another way!
+    luckyNumber: {
+      type: new GraphQLObjectType({
+        name: 'LuckyNumber',
+        fields: {
+          value: { type: GraphQLFloat }
+        }
+      }),
+      resolve: () => ({ value: Math.random() })
     }
   })
 })

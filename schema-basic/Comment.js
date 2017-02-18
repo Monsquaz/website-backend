@@ -1,7 +1,9 @@
 import {
   GraphQLObjectType,
+  GraphQLList,
   GraphQLString,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLBoolean
 } from 'graphql'
 
 import Post from './Post'
@@ -23,6 +25,15 @@ export default new GraphQLObjectType({
       // assumed to be "body"
       type: GraphQLString
     },
+    likers: {
+      description: 'Users who liked this comment',
+      type: new GraphQLList(User),
+      junctionTable: 'likes',
+      sqlJoins: [
+        (commentTable, likeTable) => `${commentTable}.id = ${likeTable}.comment_id`,
+        (likeTable, accountTable) => `${likeTable}.account_id = ${accountTable}.id`
+      ]
+    },
     post: {
       description: 'The post that the comment belongs to',
       // a back reference to its Post
@@ -35,6 +46,9 @@ export default new GraphQLObjectType({
       // and one to its User
       type: User,
       sqlJoin: (commentTable, userTable) => `${commentTable}.author_id = ${userTable}.id`
+    },
+    archived: {
+      type: GraphQLBoolean
     }
   })
 })

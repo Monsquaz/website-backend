@@ -2,7 +2,8 @@ import {
   GraphQLObjectType,
   GraphQLList,
   GraphQLString,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLBoolean
 } from 'graphql'
 
 import User from './User'
@@ -28,13 +29,29 @@ export default new GraphQLObjectType({
       description: 'The user that created the post',
       // a back reference to its User
       type: User,
-      // how to join these tables
+      // this is a one-to-one
       sqlJoin: (postTable, userTable) => `${postTable}.author_id = ${userTable}.id`
     },
     comments: {
       description: 'The comments on this post',
       type: new GraphQLList(Comment),
-      sqlJoin: (postTable, commentTable) => `${postTable}.id = ${commentTable}.post_id`
+      // instead of doing yet another JOIN, we'll get these comments in a separate batch
+      sqlBatch: {
+        // which column to match up to the users
+        thisKey: 'author_id',
+        // the other column to compare to
+        parentKey: 'id'
+      },
+      where: table => `${table}.archived = (0 = 1)`
+    },
+    numComments: {
+      description: 'The number of comments on this post',
+      type: GraphQLInt,
+      // use a correlated subquery in a raw SQL expression to do things like aggregation
+      sqlExpr: table => `(SELECT count(*) FROM comments WHERE post_id = ${table}.id AND archived = (0 = 1))`
+    },
+    archived: {
+      type: GraphQLBoolean
     }
   })
 })
