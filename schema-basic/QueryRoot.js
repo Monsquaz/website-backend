@@ -34,7 +34,7 @@ export default new GraphQLObjectType({
           type: GraphQLInt
         }
       },
-      // this functino generates the WHERE condition
+      // this function generates the WHERE condition
       where: (usersTable, args, context) => { // eslint-disable-line no-unused-vars
         if (args.id) return `${usersTable}.id = ${args.id}`
       },
