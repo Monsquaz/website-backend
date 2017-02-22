@@ -2,7 +2,8 @@ import {
   GraphQLObjectType,
   GraphQLList,
   GraphQLString,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLFloat
 } from 'graphql'
 
 import {
@@ -12,6 +13,7 @@ import {
   connectionDefinitions
 } from 'graphql-relay'
 
+import knex from './database'
 import { PostConnection } from './Post'
 import { CommentConnection } from './Comment'
 import { nodeInterface } from './Node'
@@ -91,12 +93,20 @@ const User = new GraphQLObjectType({
     },
     favNums: {
       type: new GraphQLList(GraphQLInt),
+      // you can still have resolvers that get data from other sources. simply omit the `sqlColumn` and define a resolver
       resolve: () => [1, 2, 3]
     },
-    numLegs: {
-      description: 'How many legs this user has',
-      type: GraphQLInt,
-      sqlColumn: 'num_legs'
+    // object types without a `sqlTable` are a no-op. Join Monster will ignore it and let you resolve it another way!
+    luckyNumber: {
+      type: new GraphQLObjectType({
+        name: 'LuckyNumber',
+        fields: {
+          value: { type: GraphQLFloat }
+        }
+      }),
+      resolve: () => {
+        return knex.raw('SELECT random() AS num').then(num => ({ value: num.rows[0].num }))
+      }
     }
   })
 })

@@ -2,6 +2,7 @@ import {
   GraphQLObjectType,
   GraphQLList,
   GraphQLString,
+  GraphQLBoolean,
   GraphQLInt
 } from 'graphql'
 
@@ -49,6 +50,9 @@ export const Comment = new GraphQLObjectType({
       type: User,
       sqlJoin: (commentTable, userTable) => `${commentTable}.author_id = ${userTable}.id`
     },
+    archived: {
+      type: GraphQLBoolean
+    },
     createdAt: {
       type: GraphQLString,
       sqlColumn: 'created_at'
@@ -74,6 +78,9 @@ export const SimpleComment = new GraphQLObjectType({
     postId: {
       type: GraphQLInt,
       resolve: comment => comment.post_id
+    },
+    archived: {
+      type: GraphQLBoolean
     },
     createdAt: {
       type: GraphQLString,

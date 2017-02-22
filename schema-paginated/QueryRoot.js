@@ -35,6 +35,9 @@ export default new GraphQLObjectType({
         if (args.id) return `${usersTable}.id = ${args.id}`
       },
       resolve: (parent, args, context, resolveInfo) => {
+        if (knex.client.config.client !== 'pg') {
+          throw new Error('This schema requires PostgreSQL. A data dump is provided in /data.')
+        }
         return joinMonster(resolveInfo, context, sql => dbCall(sql, knex, context), options)
       }
     }

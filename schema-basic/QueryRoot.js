@@ -1,4 +1,3 @@
-import path from 'path'
 import {
   GraphQLObjectType,
   GraphQLList,
@@ -6,17 +5,9 @@ import {
   GraphQLInt
 } from 'graphql'
 
-// connect to our database file
-const dataFilePath = path.join(__dirname, '../data/demo-data.sl3')
-const knex = require('knex')({
-  client: 'sqlite3',
-  connection: {
-    filename: dataFilePath
-  },
-  useNullAsDefault: true
-})
 
 import joinMonster from 'join-monster'
+import knex from './database'
 import dbCall from '../data/fetch'
 import User from './User'
 
@@ -48,7 +39,7 @@ export default new GraphQLObjectType({
         if (args.id) return `${usersTable}.id = ${args.id}`
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, context, sql => dbCall(sql, knex, context), { minify: true })
+        return joinMonster(resolveInfo, context, sql => dbCall(sql, knex, context))
       }
     }
   })

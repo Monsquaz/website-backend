@@ -38,7 +38,7 @@ export default new GraphQLObjectType({
       // instead of doing yet another JOIN, we'll get these comments in a separate batch
       sqlBatch: {
         // which column to match up to the users
-        thisKey: 'author_id',
+        thisKey: 'post_id',
         // the other column to compare to
         parentKey: 'id'
       },

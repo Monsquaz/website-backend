@@ -6,6 +6,7 @@ import {
   GraphQLFloat
 } from 'graphql'
 
+import knex from './database'
 import Comment from './Comment'
 import Post from './Post'
 
@@ -88,7 +89,9 @@ const User = new GraphQLObjectType({
           value: { type: GraphQLFloat }
         }
       }),
-      resolve: () => ({ value: Math.random() })
+      resolve: () => {
+        return knex.raw('SELECT random() AS num').then(num => ({ value: num[0].num }))
+      }
     }
   })
 })

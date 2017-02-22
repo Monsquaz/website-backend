@@ -1,7 +1,8 @@
 import {
   GraphQLObjectType,
   GraphQLList,
-  GraphQLString
+  GraphQLString,
+  GraphQLBoolean
 } from 'graphql'
 
 import {
@@ -45,11 +46,18 @@ export const Post = new GraphQLObjectType({
       orderBy: {
         id: 'desc'
       },
-      sqlJoin: (postTable, commentTable) => `${postTable}.id = ${commentTable}.post_id AND ${commentTable}.archived = FALSE`
+      sqlBatch: {
+        thisKey: 'post_id',
+        parentKey: 'id'
+      },
+      where: table => `${table}.archived = FALSE`
     },
     commentsWithoutJoin: {
       type: new GraphQLList(SimpleComment),
       sqlExpr: table => `(SELECT json_agg(comments) FROM comments WHERE comments.post_id = ${table}.id AND comments.archived = FALSE)`
+    },
+    archived: {
+      type: GraphQLBoolean
     },
     createdAt: {
       type: GraphQLString,
