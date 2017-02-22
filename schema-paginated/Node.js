@@ -6,6 +6,7 @@ import {
 import joinMonster from 'join-monster'
 
 import knex from './database'
+import dbCall from '../data/fetch'
 
 const options = { dialect: 'pg' }
 
@@ -17,16 +18,7 @@ const { nodeInterface, nodeField } = nodeDefinitions(
     const { type, id } = fromGlobalId(globalId)
     // helper method for getting Nodes from the DB, similar to the parent function.
     // also need to pass it the type name and a where function
-    return joinMonster.getNode(type, resolveInfo, context,
-      table => `${table}.id = ${id}`,
-      sql => {
-        if (context) {
-          context.set('X-SQL-Preview', sql.replace(/\n/g, '%0A'))
-        }
-        return knex.raw(sql)
-      },
-      options
-    )
+    return joinMonster.getNode(type, resolveInfo, context, parseInt(id), sql => dbCall(sql, knex, context), options)
   },
   // this function determines the type. `joinMonster` figures it out for you and attaches the type to the result in the "__type__" property
   obj => obj.__type__

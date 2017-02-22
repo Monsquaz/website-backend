@@ -6,10 +6,6 @@ import {
   GraphQLFloat
 } from 'graphql'
 
-import {
-  globalIdField
-} from 'graphql-relay'
-
 import Comment from './Comment'
 import Post from './Post'
 
@@ -61,6 +57,7 @@ const User = new GraphQLObjectType({
       description: 'Comments the user has written on people\'s posts',
       // another one-to-many relation
       type: new GraphQLList(Comment),
+      // only JOIN comments that are not archived
       sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id AND ${commentTable}.archived = (0 = 1)`
     },
     following: {

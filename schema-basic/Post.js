@@ -42,6 +42,7 @@ export default new GraphQLObjectType({
         // the other column to compare to
         parentKey: 'id'
       },
+      // only get the comments where archived is `false`. sqlite3 has no FALSE keyword. `0 = 1` is a workaround to be compatible
       where: table => `${table}.archived = (0 = 1)`
     },
     numComments: {
@@ -52,6 +53,10 @@ export default new GraphQLObjectType({
     },
     archived: {
       type: GraphQLBoolean
+    },
+    createdAt: {
+      type: GraphQLString,
+      sqlColumn: 'created_at'
     }
   })
 })

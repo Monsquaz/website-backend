@@ -1,18 +1,17 @@
 import {
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLInt
+  GraphQLList,
+  GraphQLString
 } from 'graphql'
 
 import {
   globalIdField,
   connectionDefinitions,
-  connectionArgs,
-  connectionFromArray
+  forwardConnectionArgs
 } from 'graphql-relay'
 
 import User from './User'
-import { CommentConnection } from './Comment'
+import { CommentConnection, SimpleComment } from './Comment'
 import { nodeInterface } from './Node'
 
 
@@ -28,10 +27,6 @@ export const Post = new GraphQLObjectType({
       ...globalIdField(),
       sqlDeps: [ 'id' ]
     },
-    clearId: {
-      type: GraphQLInt,
-      sqlColumn: 'id'
-    },
     body: {
       description: 'The content of the post',
       type: GraphQLString
@@ -45,12 +40,20 @@ export const Post = new GraphQLObjectType({
       description: 'The comments on this post',
       // a nested connection
       type: CommentConnection,
-      args: connectionArgs,
+      args: forwardConnectionArgs,
       sqlPaginate: true,
       orderBy: {
         id: 'desc'
       },
-      sqlJoin: (postTable, commentTable) => `${postTable}.id = ${commentTable}.post_id`
+      sqlJoin: (postTable, commentTable) => `${postTable}.id = ${commentTable}.post_id AND ${commentTable}.archived = FALSE`
+    },
+    commentsWithoutJoin: {
+      type: new GraphQLList(SimpleComment),
+      sqlExpr: table => `(SELECT json_agg(comments) FROM comments WHERE comments.post_id = ${table}.id AND comments.archived = FALSE)`
+    },
+    createdAt: {
+      type: GraphQLString,
+      sqlColumn: 'created_at'
     }
   })
 })

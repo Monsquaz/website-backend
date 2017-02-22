@@ -1,5 +1,6 @@
 import {
   GraphQLObjectType,
+  GraphQLList,
   GraphQLString,
   GraphQLInt
 } from 'graphql'
@@ -25,13 +26,18 @@ export const Comment = new GraphQLObjectType({
       ...globalIdField(),
       sqlDeps: [ 'id' ]
     },
-    clearId: {
-      type: GraphQLInt,
-      sqlColumn: 'id'
-    },
     body: {
       description: 'The content of the comment',
       type: GraphQLString
+    },
+    likers: {
+      description: 'Users who liked this comment',
+      type: new GraphQLList(User),
+      junctionTable: 'likes',
+      sqlJoins: [
+        (commentTable, likeTable) => `${commentTable}.id = ${likeTable}.comment_id`,
+        (likeTable, accountTable) => `${likeTable}.account_id = ${accountTable}.id`
+      ]
     },
     post: {
       description: 'The post that the comment belongs to',
@@ -42,10 +48,48 @@ export const Comment = new GraphQLObjectType({
       description: 'The user who wrote the comment',
       type: User,
       sqlJoin: (commentTable, userTable) => `${commentTable}.author_id = ${userTable}.id`
+    },
+    createdAt: {
+      type: GraphQLString,
+      sqlColumn: 'created_at'
+    }
+  })
+})
+
+export const SimpleComment = new GraphQLObjectType({
+  description: 'comments on the post without join capabilities',
+  name: 'SimpleComment',
+  fields: () => ({
+    id: {
+      ...globalIdField(),
+      sqlDeps: [ 'id' ]
+    },
+    body: {
+      type: GraphQLString
+    },
+    authorId: {
+      type: GraphQLInt,
+      resolve: comment => comment.author_id
+    },
+    postId: {
+      type: GraphQLInt,
+      resolve: comment => comment.post_id
+    },
+    createdAt: {
+      type: GraphQLString,
+      resolve: comment => comment.created_at
     }
   })
 })
 
 // create a connection type from the Comment type
-const { connectionType: CommentConnection } = connectionDefinitions({ nodeType: Comment })
+// this connection will also include a "total" so we know how many total comments there are
+// this could be used to calculate page numbers
+const { connectionType: CommentConnection } = connectionDefinitions({
+  nodeType: Comment,
+  connectionFields: {
+    total: { type: GraphQLInt }
+  }
+})
+
 export { CommentConnection }

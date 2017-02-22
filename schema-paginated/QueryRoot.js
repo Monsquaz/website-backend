@@ -1,14 +1,15 @@
 import {
   GraphQLObjectType,
-  GraphQLList,
   GraphQLString,
   GraphQLInt
 } from 'graphql'
 
-import knex from './database'
 import joinMonster from 'join-monster'
+
+import knex from './database'
 import User from './User'
 import { nodeField } from './Node'
+import dbCall from '../data/fetch'
 
 const options = { dialect: 'pg' }
 
@@ -34,12 +35,7 @@ export default new GraphQLObjectType({
         if (args.id) return `${usersTable}.id = ${args.id}`
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, context, sql => {
-          if (context) {
-            context.set('X-SQL-Preview', sql.replace(/\n/g, '%0A'))
-          }
-          return knex.raw(sql)
-        }, options)
+        return joinMonster(resolveInfo, context, sql => dbCall(sql, knex, context), options)
       }
     }
   })

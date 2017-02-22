@@ -8,7 +8,7 @@ import {
 import {
   globalIdField,
   connectionArgs,
-  connectionFromArray,
+  forwardConnectionArgs,
   connectionDefinitions
 } from 'graphql-relay'
 
@@ -41,32 +41,36 @@ const User = new GraphQLObjectType({
       sqlDeps: [ 'first_name', 'last_name' ],
       resolve: user => `${user.first_name} ${user.last_name}`
     },
-    comments: {
-      description: 'Comments the user has written on people\'s posts',
-      // this is now a connection type
-      type: CommentConnection,
-      args: connectionArgs,
-      // one implementation of pagination that uses interger offsets
-      sqlPaginate: true,
-      // specify what to order on
-      orderBy: {
-        id: 'desc'
-      },
-      // join is the same as before
-      sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id`
+    fullNameAnotherWay: {
+      type: GraphQLString,
+      sqlExpr: table => `${table}.first_name || ' ' || ${table}.last_name`
     },
     posts: {
       description: 'A list of Posts the user has written',
-      // a Post connection as well
+      // this is now a connection type
       type: PostConnection, 
+      // these args navigate through the pages
       args: connectionArgs,
       sqlPaginate: true,
-      // another implementation, "keyset" pagination, based on a unique sorting key
+      // use "keyset" pagination, an implementation based on a unique sorting key
       sortKey: {
         order: 'desc',
         key: 'id'
       },
       sqlJoin: (userTable, postTable) => `${userTable}.id = ${postTable}.author_id`
+    },
+    comments: {
+      description: 'Comments the user has written on people\'s posts',
+      type: CommentConnection,
+      // this implementation only allows "forward pagination"
+      args: forwardConnectionArgs,
+      sqlPaginate: true,
+      // this time use "offset pagination", an implementation based on LIMIT/OFFSET
+      orderBy: {
+        id: 'desc'
+      },
+      // join is the same as before
+      sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id AND ${commentTable}.archived = FALSE`
     },
     following: {
       description: 'Users that this user is following',
