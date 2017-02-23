@@ -1,6 +1,7 @@
 import {
   GraphQLObjectType,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLString,
   GraphQLInt
 } from 'graphql'
@@ -31,12 +32,12 @@ export default new GraphQLObjectType({
       args: {
         id: {
           description: 'The users ID number',
-          type: GraphQLInt
+          type: new GraphQLNonNull(GraphQLInt)
         }
       },
       // this function generates the WHERE condition
       where: (usersTable, args, context) => { // eslint-disable-line no-unused-vars
-        if (args.id) return `${usersTable}.id = ${args.id}`
+        return `${usersTable}.id = ${args.id}`
       },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, context, sql => dbCall(sql, knex, context))

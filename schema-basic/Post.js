@@ -36,6 +36,7 @@ export default new GraphQLObjectType({
       description: 'The comments on this post',
       type: new GraphQLList(Comment),
       // instead of doing yet another JOIN, we'll get these comments in a separate batch
+      // sqlJoin: (postTable, commentTable) => `${postTable}.id = ${commentTable}.post_id AND ${commentTable}.archived = (0 = 1)`,
       sqlBatch: {
         // which column to match up to the users
         thisKey: 'post_id',
