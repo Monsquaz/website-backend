@@ -2,6 +2,7 @@ import {
   GraphQLObjectType,
   GraphQLList,
   GraphQLString,
+  GraphQLInt,
   GraphQLBoolean
 } from 'graphql'
 
@@ -67,6 +68,12 @@ export const Post = new GraphQLObjectType({
 })
 
 // create the connection type from the post
-const { connectionType: PostConnection } = connectionDefinitions({ nodeType: Post })
+const { connectionType: PostConnection } = connectionDefinitions({
+  nodeType: Post,
+  // join monster also provides the total number, so we'll expose that in the API
+  connectionFields: {
+    total: { type: GraphQLInt }
+  }
+})
 export { PostConnection }
 

@@ -8,6 +8,7 @@ import {
 
 import Post from './Post'
 import User from './User'
+import Authored from './Authored'
 
 export default new GraphQLObjectType({
   description: 'Comments on posts',
@@ -15,6 +16,7 @@ export default new GraphQLObjectType({
   // another SQL table to map to
   sqlTable: 'comments',
   uniqueKey: 'id',
+  interfaces: () => [ Authored ],
   fields: () => ({
     id: {
       // assumed SQL column to be "id"
@@ -47,8 +49,16 @@ export default new GraphQLObjectType({
       type: User,
       sqlJoin: (commentTable, userTable) => `${commentTable}.author_id = ${userTable}.id`
     },
+    authorId: {
+      type: GraphQLInt,
+      sqlcolumn: 'author_id'
+    },
     archived: {
       type: GraphQLBoolean
+    },
+    postId: {
+      type: GraphQLInt,
+      sqlColumn: 'post_id'
     },
     createdAt: {
       type: GraphQLString,

@@ -8,6 +8,7 @@ import {
 
 import User from './User'
 import Comment from './Comment'
+import Authored from './Authored'
 
 export default new GraphQLObjectType({
   description: 'A post from a user',
@@ -15,6 +16,7 @@ export default new GraphQLObjectType({
   // another table in SQL to map to 
   sqlTable: 'posts',
   uniqueKey: 'id',
+  interfaces: () => [ Authored ],
   fields: () => ({
     id: {
       // SQL column assumed to be "id"
@@ -31,6 +33,10 @@ export default new GraphQLObjectType({
       type: User,
       // this is a one-to-one
       sqlJoin: (postTable, userTable) => `${postTable}.author_id = ${userTable}.id`
+    },
+    authorId: {
+      type: GraphQLInt,
+      sqlColumn: 'author_id'
     },
     comments: {
       description: 'The comments on this post',

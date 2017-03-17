@@ -9,6 +9,7 @@ import {
 import knex from './database'
 import Comment from './Comment'
 import Post from './Post'
+import Authored from './Authored'
 
 const User = new GraphQLObjectType({
   description: 'a stem contract account',
@@ -52,14 +53,16 @@ const User = new GraphQLObjectType({
       type: new GraphQLList(Post),
       // this is a one-to-many relation
       // this function tells join monster how to join these tables
-      sqlJoin: (userTable, postTable) => `${userTable}.id = ${postTable}.author_id`
+      sqlJoin: (userTable, postTable) => `${userTable}.id = ${postTable}.author_id`,
+      orderBy: 'id'
     },
     comments: {
       description: 'Comments the user has written on people\'s posts',
       // another one-to-many relation
       type: new GraphQLList(Comment),
       // only JOIN comments that are not archived
-      sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id AND ${commentTable}.archived = (0 = 1)`
+      sqlJoin: (userTable, commentTable) => `${userTable}.id = ${commentTable}.author_id AND ${commentTable}.archived = (0 = 1)`,
+      orderBy: { id: 'DESC' }
     },
     following: {
       description: 'Users that this user is following',
@@ -92,6 +95,12 @@ const User = new GraphQLObjectType({
       resolve: () => {
         return knex.raw('SELECT random() AS num').then(num => ({ value: num[0].num }))
       }
+    },
+    writtenMaterial: {
+      // use an interface type
+      type: new GraphQLList(Authored),
+      orderBy: 'id',
+      sqlJoin: (userTable, unionTable) => `${userTable}.id = ${unionTable}.author_id`
     }
   })
 })
