@@ -79,17 +79,19 @@ const User = new GraphQLObjectType({
       type: UserConnection,
       args: connectionArgs,
       sqlPaginate: true,
-      // the unique sort key can be composite
-      sortKey: {
-        order: 'desc',
-        key: [ 'created_at', 'followee_id' ]
-      },
       // pagination also works with many-to-many
-      joinTable: 'relationships',
-      sqlJoins: [
-        (followerTable, relationTable) => `${followerTable}.id = ${relationTable}.follower_id`,
-        (relationTable, followeeTable) => `${relationTable}.followee_id = ${followeeTable}.id`
-      ]
+      junction: {
+        sqlTable: 'relationships',
+        // the unique sort key can be composite
+        sortKey: {
+          order: 'desc',
+          key: [ 'created_at', 'followee_id' ]
+        },
+        sqlJoins: [
+          (followerTable, relationTable) => `${followerTable}.id = ${relationTable}.follower_id`,
+          (relationTable, followeeTable) => `${relationTable}.followee_id = ${followeeTable}.id`
+        ]
+      }
     },
     favNums: {
       type: new GraphQLList(GraphQLInt),

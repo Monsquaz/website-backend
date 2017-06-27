@@ -30,11 +30,13 @@ export default new GraphQLObjectType({
     likers: {
       description: 'Users who liked this comment',
       type: new GraphQLList(User),
-      junctionTable: 'likes',
-      sqlJoins: [
-        (commentTable, likeTable) => `${commentTable}.id = ${likeTable}.comment_id`,
-        (likeTable, accountTable) => `${likeTable}.account_id = ${accountTable}.id`
-      ]
+      junction: {
+        sqlTable: 'likes',
+        sqlJoins: [
+          (commentTable, likeTable) => `${commentTable}.id = ${likeTable}.comment_id`,
+          (likeTable, accountTable) => `${likeTable}.account_id = ${accountTable}.id`
+        ]
+      }
     },
     post: {
       description: 'The post that the comment belongs to',

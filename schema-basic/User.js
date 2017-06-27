@@ -68,11 +68,13 @@ const User = new GraphQLObjectType({
       description: 'Users that this user is following',
       type: new GraphQLList(User),
       // many-to-many is supported too, via an intermediate join table
-      junctionTable: 'relationships',
-      sqlJoins: [
-        (followerTable, relationTable) => `${followerTable}.id = ${relationTable}.follower_id`,
-        (relationTable, followeeTable) => `${relationTable}.followee_id = ${followeeTable}.id`
-      ]
+      junction: {
+        sqlTable: 'relationships',
+        sqlJoins: [
+          (followerTable, relationTable) => `${followerTable}.id = ${relationTable}.follower_id`,
+          (relationTable, followeeTable) => `${relationTable}.followee_id = ${followeeTable}.id`
+        ]
+      }
     },
     favNums: {
       type: new GraphQLList(GraphQLInt),
