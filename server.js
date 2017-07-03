@@ -7,6 +7,7 @@ import graphiql from 'koa-custom-graphiql'
 import koaStatic from 'koa-static'
 import koaConvert from 'koa-convert'
 import koaCors from 'kcors'
+import db from './db'
 
 const app = new Koa
 const router = new KoaRouter
