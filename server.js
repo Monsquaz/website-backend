@@ -25,7 +25,7 @@ router.get('/graphql-relay', graphiql({
   js: '/graphiql.js'
 }))
 
-/*
+
 router.post('/graphql', koaConvert(graphqlHTTP({
   schema: schemaBasic,
   formatError: e => {
@@ -33,7 +33,7 @@ router.post('/graphql', koaConvert(graphqlHTTP({
     return e
   }
 })))
-
+/*
 router.post('/graphql-relay', koaConvert(graphqlHTTP({
   schema: schemaRelay,
   formatError: e => {
@@ -51,5 +51,5 @@ app.use(router.allowedMethods())
 app.use(koaStatic(path.join(__dirname, 'node_modules/graphsiql')))
 
 const port = process.env.PORT || 3000
-app.listen(port, () => console.log(`server listening at http://localhost:${port}/graphql && http://localhost:${port}/graphql-relay`))
+app.listen(port, () => console.log(`server listening at http://monsquaz.org:${port}/graphql && http://monsquaz.org:${port}/graphql-relay`))
 
