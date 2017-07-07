@@ -21,7 +21,7 @@ let createTables = function(knex, Promise){
     })
     .createTable('users_actions_administrables', function(table){
       table.increments();
-      table.integer('usergroup_id').unsigned();
+      table.integer('user_id').unsigned();
       table.integer('action_id').unsigned();
       table.integer('administrable_id').unsigned();
     })
