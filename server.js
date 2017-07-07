@@ -8,6 +8,7 @@ import koaStatic from 'koa-static'
 import koaConvert from 'koa-convert'
 import koaCors from 'kcors'
 import db from './db'
+import schema from './graphql/index'
 
 const app = new Koa
 const router = new KoaRouter
@@ -27,7 +28,7 @@ router.get('/graphql-relay', graphiql({
 
 
 router.post('/graphql', koaConvert(graphqlHTTP({
-  schema: schemaBasic,
+  schema: schema,
   formatError: e => {
     console.error(e)
     return e
