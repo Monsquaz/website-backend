@@ -6,7 +6,7 @@ import {
   GraphQLFloat
 } from 'graphql';
 
-import knex from '../db';
+import db from '../db';
 import Translation from './Translation';
 
 export default new GraphQLObjectType({
@@ -20,15 +20,23 @@ export default new GraphQLObjectType({
      },
      name: {
        type: new GraphQLList(Translation),
+       args: {
+        lang: {
+          type: GraphQLString
+        }
+       },
        junction: {
          sqlTable: 'translatables',
          sqlJoins: [
            (menusTable, translatablesTable, args) => `${menusTable}.name_translatable_id = ${translatablesTable}.id`,
-           (translatablesTable, translationsTable, args) => `${translatablesTable}.id = ${translationsTable}.translatable_id`,
+           (translatablesTable, translationsTable, args) => {
+             let joinStr = `${translatablesTable}.id = ${translationsTable}.translatable_id`;
+             if(args.lang) joinStr += db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString();
+             return joinStr;
+           },
          ]
        }
      }
-     // name_translatable_id
-     // administrable_id
+     // TODO: items.
    })
  });
