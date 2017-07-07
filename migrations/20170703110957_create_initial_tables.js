@@ -163,7 +163,7 @@ let setupForeignKeys = function(knex, Promise){
       table.foreign('description_translatable_id').references('translatables.id');
     })
     .table('users_actions_administrables', function(table){
-      table.foreign('usergroup_id').references('usergroups.id');
+      table.foreign('user_id').references('usergroups.id');
       table.foreign('action_id').references('actions.id');
       table.foreign('administrable_id').references('administrables.id');
     })
@@ -240,7 +240,7 @@ let dropForeignKeys = function(knex, Promise){
       table.dropForeign('description_translatable_id');
     })
     .table('users_actions_administrables', function(table){
-      table.dropForeign('usergroup_id');
+      table.dropForeign('user_id');
       table.dropForeign('action_id');
       table.dropForeign('administrable_id');
     })
