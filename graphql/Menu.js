@@ -27,6 +27,7 @@ export default new GraphQLObjectType({
        sqlTable: 'menu_items',
        sqlJoin: (menusTable, menuItemsTable, args) => `${menusTable}.id = ${menuItemsTable}.menu_id`
      },
-     itemTree: Util.treeField('menu_items_menu_items', MenuItemsTree)
+     itemTree: Util.treeField('menu_items_menu_items', MenuItemsTree),
+     actions:  Util.actionsField('administrable_id')
    })
  });

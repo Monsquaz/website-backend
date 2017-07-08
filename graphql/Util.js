@@ -56,11 +56,11 @@ export default {
   }),
   actionsField: (fieldName) => ({
     type: new GraphQLList(ActionMapping),
-    sqlJoin: (usersTable, derivedTable, args) => `${usersTable}.${fieldName} = ${derivedTable}.descendant`,
-    where: (table, args, context) => {
-      let whereStr = `${table}.user_id = 1`; // 1 = Guest user_id
-      if(context.user_id) whereStr += ` OR ${table}.user_id = ${context.user_id}`;
-      return whereStr;
+    sqlJoin: (thisTable, derivedTable, args, context) => {
+      let joinStr = `${thisTable}.${fieldName} = ${derivedTable}.descendant AND (${derivedTable}.user_id = 1`;
+      if(context.user_id) joinStr += ` OR ${derivedTable}.user_id = ${context.user_id}`;
+      joinStr += ')';
+      return joinStr;
     }
   })
 };

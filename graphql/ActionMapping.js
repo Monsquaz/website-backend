@@ -18,7 +18,7 @@ const ActionMapping = new GraphQLObjectType({
                LEFT JOIN users AS u ON uaa.user_id = u.id
                LEFT JOIN users_usergroups AS uu ON uu.user_id=u.id
                LEFT JOIN usergroups_actions_administrables AS ugaa ON ugaa.administrable_id=aa.ancestor AND ugaa.usergroup_id=uu.usergroup_id
-               JOIN actions AS a ON (a.id=uaa.action_id OR a.id=ugaa.action_id))`,
+               LEFT JOIN actions AS a ON (a.id=uaa.action_id OR a.id=ugaa.action_id))`,
    uniqueKey: 'id',
    fields: () => ({
      id: {
