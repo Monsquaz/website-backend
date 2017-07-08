@@ -9,6 +9,7 @@ import {
 import db from '../db';
 import Translation from './Translation';
 import Util from './Util';
+import ActionMapping from './ActionMapping';
 
 export default new GraphQLObjectType({
    description: 'A user',
@@ -21,6 +22,7 @@ export default new GraphQLObjectType({
      },
      name: {
        type: GraphQLString
-     }
+     },
+     actions: Util.actionsField('administrable_id')
    })
  });

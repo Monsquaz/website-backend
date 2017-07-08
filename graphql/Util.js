@@ -5,6 +5,8 @@ import {
 } from 'graphql';
 
 import Translation from './Translation';
+import ActionMapping from './ActionMapping';
+
 import db from '../db';
 
 export default {
@@ -50,6 +52,15 @@ export default {
         throw new Error('Depth without root');
       }
       return joinStr;
+    }
+  }),
+  actionsField: (fieldName) => ({
+    type: new GraphQLList(ActionMapping),
+    sqlJoin: (usersTable, derivedTable, args) => `${usersTable}.${fieldName} = ${derivedTable}.descendant`,
+    where: (table, args, context) => {
+      let whereStr = `${table}.user_id = 1`; // 1 = Guest user_id
+      if(context.user_id) whereStr += ` OR ${table}.user_id = ${context.user_id}`;
+      return whereStr;
     }
   })
 };
