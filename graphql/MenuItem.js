@@ -8,6 +8,7 @@ import {
 
 import db from '../db';
 import Translation from './Translation';
+import Util from './Util';
 
 const MenuItem = new GraphQLObjectType({
    description: 'A menu item',
@@ -18,35 +19,7 @@ const MenuItem = new GraphQLObjectType({
      id: {
        type: GraphQLInt
      },
-     title: {
-       type: new GraphQLList(Translation),
-       args: {
-        lang: {
-          type: GraphQLString
-        }
-       },
-       junction: {
-         sqlTable: 'translatables',
-         sqlJoins: [
-           (menuItemsTable, translatablesTable, args) => `${menuItemsTable}.title_translatable_id = ${translatablesTable}.id`,
-           (translatablesTable, translationsTable, args) => {
-             let joinStr = `${translatablesTable}.id = ${translationsTable}.translatable_id`;
-             if(args.lang) joinStr += db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString();
-             return joinStr;
-           }
-         ]
-       }
-     },
-     children: {
-       type: new GraphQLList(MenuItem),
-       junction: {
-         sqlTable: 'menu_items_menu_items',
-         sqlJoins: [
-           (menuItemsTable, menuItemsHierarchyTable, args) => `${menuItemsTable}.id = ${menuItemsHierarchyTable}.ancestor AND ${menuItemsHierarchyTable}.depth > 0`,
-           (menuItemsHierarchyTable, menuItemsTable, args) => `${menuItemsHierarchyTable}.descendant = ${menuItemsTable}.id`
-         ]
-       }
-     }
+     title: Util.translationField('title_translatable_id')
    })
  });
 

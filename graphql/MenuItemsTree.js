@@ -17,6 +17,9 @@ const MenuItemsTree = new GraphQLObjectType({
      id: {
        type: GraphQLInt
      },
+     menu_id: {
+       type: GraphQLInt
+     },
      ancestor: {
        type: GraphQLInt
      },
