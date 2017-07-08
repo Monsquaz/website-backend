@@ -72,6 +72,7 @@ exports.up = function(knex, Promise) {
     }).then(() => {
       return knex.schema
         .createTable('menu_items_menu_items', function(table){
+          table.increments();
           table.integer('ancestor').unsigned();
           table.integer('descendant').unsigned();
           table.integer('length').unsigned().notNullable();
