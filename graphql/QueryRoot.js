@@ -9,6 +9,7 @@ import {
 import joinMonster from 'join-monster';
 import db from '../db';
 import Menu from './Menu';
+import User from './User';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -24,6 +25,23 @@ export default new GraphQLObjectType({
       },
       where: (menusTable, args, context) => {
         if(args.id) return `${menusTable}.id = ${args.id}`;
+      },
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, {}, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql" })
+      }
+    },
+    users: {
+      type: new GraphQLList(User),
+      args: {
+        id: {
+          description: 'The user id',
+          type: GraphQLInt
+        }
+      },
+      where: (usersTable, args, context) => {
+        if(args.id) return `${usersTable}.id = ${args.id}`;
       },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, sql => {
