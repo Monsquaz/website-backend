@@ -9,8 +9,10 @@ import {
 import joinMonster from 'join-monster';
 import db from '../db';
 import Menu from './Menu';
+import Administrable from './Administrable';
 import User from './User';
 import Util from './Util';
+import AdministrablesTree from './AdministrablesTree';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -35,6 +37,64 @@ export default new GraphQLObjectType({
           user_id:    context.user_id,
           tableName:  menusTable,
           fieldName: 'administrable_id'
+        });
+        return wheres.join(' AND ');
+      },
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, {}, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" })
+      }
+    },
+    administrablesTree: {
+      type: new GraphQLList(AdministrablesTree),
+      args: {
+        id: {
+          description: 'The administrable tree id',
+          type: GraphQLInt
+        },
+        ...Util.actionArguments
+      },
+      where: (treeTable, args, context) => {
+        let wheres = [
+          'depth = 1'
+        ];
+        if(args.id) wheres.push(`${treeTable}.id = ${args.id}`);
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    context.user_id,
+          tableName:  treeTable,
+          fieldName: 'ancestor'
+        });
+        return wheres.join(' AND ');
+      },
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, {}, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" })
+      }
+    },
+    administrables: {
+      type: new GraphQLList(Administrable),
+      args: {
+        id: {
+          description: 'The administrable id',
+          type: GraphQLInt
+        },
+        ...Util.actionArguments
+      },
+      where: (administrablesTable, args, context) => {
+        let wheres = [];
+        if(args.id) wheres.push(`${administrablesTable}.id = ${args.id}`);
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    context.user_id,
+          tableName:  administrablesTable,
+          fieldName: 'id'
         });
         return wheres.join(' AND ');
       },

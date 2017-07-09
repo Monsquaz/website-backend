@@ -35,7 +35,7 @@ const Util = {
     }
   }),
 
-  treeField: (tableName, ItemType) => ({
+  treeField: (tableName, ItemType, parentKey) => ({
     type: new GraphQLList(ItemType),
     args: {
       root: {
@@ -47,7 +47,10 @@ const Util = {
     },
     sqlTable: tableName,
     sqlJoin: (thisTable, treeTable, args) => {
-      let joinStr = `${thisTable}.id = ${treeTable}.menu_id AND depth = 1`;
+      let joinStr = `depth = 1`;
+      if(parentKey) {
+        joinStr += ` AND ${thisTable}.id = ${treeTable}.${parentKey}`;
+      }
       if(args.root) {
          joinStr += ` AND (${treeTable}.ancestor = ${args.root} OR ${treeTable}.ancestor IN (SELECT descendant FROM ${tableName} WHERE ancestor = ${args.root}`
         if(args.depth) {
@@ -86,7 +89,6 @@ const Util = {
   },
 
   requireAllActions: (userId, tableName, fieldName, actionNames) => {
-    console.warn('KUK!!', actionNames);
     if(actionNames.length == 1) {
       return Util.requireAction(userId, tableName, fieldName, actionNames[0]);
     }
