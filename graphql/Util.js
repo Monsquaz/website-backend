@@ -9,7 +9,7 @@ import Acl from './Acl';
 
 import db from '../db';
 
-export default {
+const Util = {
 
   translationField: (fieldName) => ({
     type: new GraphQLList(Translation),
@@ -72,35 +72,42 @@ export default {
 
   requireAction: (userId, tableName, fieldName, actionName) => {
     let userIdChecks = ['user_id = 1']; // Guest
-    // TODO: Escape userId
-    if(userId) userIdChecks.push('user_id = ' + userId);
-    // TODO: Escape actionName
-    return `'${actionName}' IN (SELECT action_name FROM acl WHERE (${userIdChecks.join(' OR ')}) AND administrable_id=${tableName}.${fieldName})`
+    if(userId) userIdChecks.push(db.knex.raw(`user_id = ?`, userId).toString());
+    return db.knex.raw(
+      `? IN (
+        SELECT action_name
+        FROM acl
+        WHERE (${userIdChecks.join(' OR ')})
+          AND administrable_id=${tableName}.${fieldName})`, actionName).toString();
   },
 
   requireAllActions: (userId, tableName, fieldName, actionNames) => {
+    if(actionNames.length == 1) {
+      return Util.requireAction(userId, tableName, fieldName, actionNames[0]);
+    }
     let userIdChecks = ['user_id = 1']; // Guest
-    // TODO: Escape userId
-    if(userId) userIdChecks.push('user_id = ' + userId);
-    // TODO: Escape actionNames
-    return `(SELECT COUNT(*)
+    if(userId) userIdChecks.push(db.knex.raw(`user_id = ?`, userId).toString());
+      return `(SELECT COUNT(*)
              FROM acl
              WHERE (${userIdChecks.join(' OR ')})
                AND administrable_id=${tableName}.${fieldName}
-               AND action_name = ANY(SELECT ${actionNames.map((e) => `'${e}'`).join(',')})
-             ) = ${actionNames.length}`;
+               AND action_name = ANY(SELECT ${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
+             ) = ${actionNames.length}`
   },
-  
+
   requireAtLeastOneAction: (userId, tableName, fieldName, actionNames) => {
+    if(actionNames.length == 1) {
+      return Util.requireAction(userId, tableName, fieldName, actionNames[0]);
+    }
     let userIdChecks = ['user_id = 1']; // Guest
-    // TODO: Escape userId
-    if(userId) userIdChecks.push('user_id = ' + userId);
-    // TODO: Escape actionNames
+    if(userId) userIdChecks.push(db.knex.raw(`user_id = ?`, userId).toString());
     return `(SELECT COUNT(*)
              FROM acl
              WHERE (${userIdChecks.join(' OR ')})
                AND administrable_id=${tableName}.${fieldName}
-               AND action_name = ANY(SELECT ${actionNames.map((e) => `'${e}'`).join(',')})
+               AND action_name = ANY(SELECT ${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
              ) > 0`;
   }
 };
+
+export default Util;
