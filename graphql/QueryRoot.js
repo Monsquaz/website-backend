@@ -22,14 +22,20 @@ export default new GraphQLObjectType({
         id: {
           description: 'The menu id',
           type: GraphQLInt
-        }
+        },
+        ...Util.actionArguments
       },
       where: (menusTable, args, context) => {
         let wheres = [];
         if(args.id) wheres.push(`${menusTable}.id = ${args.id}`);
-        wheres.push(Util.requireAction(
-          context.user_id, menusTable, 'administrable_id', 'read'
-        ));
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    context.user_id,
+          tableName:  menusTable,
+          fieldName: 'administrable_id'
+        });
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
@@ -44,14 +50,20 @@ export default new GraphQLObjectType({
         id: {
           description: 'The user id',
           type: GraphQLInt
-        }
+        },
+        ...Util.actionArguments
       },
       where: (usersTable, args, context) => {
         let wheres = [];
         if(args.id) wheres.push(`${usersTable}.id = ${args.id}`);
-        wheres.push(Util.requireAllActions(
-          context.user_id, usersTable, 'administrable_id', ['read']
-        ))
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    context.user_id,
+          tableName:  usersTable,
+          fieldName: 'administrable_id'
+        });
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {

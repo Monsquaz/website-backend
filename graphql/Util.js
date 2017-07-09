@@ -6,6 +6,10 @@ import {
 
 import Translation from './Translation';
 import Acl from './Acl';
+import {
+  union,
+  difference
+} from 'lodash';
 
 import db from '../db';
 
@@ -82,6 +86,7 @@ const Util = {
   },
 
   requireAllActions: (userId, tableName, fieldName, actionNames) => {
+    console.warn('KUK!!', actionNames);
     if(actionNames.length == 1) {
       return Util.requireAction(userId, tableName, fieldName, actionNames[0]);
     }
@@ -95,7 +100,7 @@ const Util = {
              ) = ${actionNames.length}`
   },
 
-  requireAtLeastOneAction: (userId, tableName, fieldName, actionNames) => {
+  requireAnyActions: (userId, tableName, fieldName, actionNames) => {
     if(actionNames.length == 1) {
       return Util.requireAction(userId, tableName, fieldName, actionNames[0]);
     }
@@ -107,7 +112,48 @@ const Util = {
                AND administrable_id=${tableName}.${fieldName}
                AND action_name = ANY(SELECT ${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
              ) > 0`;
+  },
+
+  // Standard arguments to be included via spread
+  actionArguments: {
+    action: {
+      description: 'An action that we are required to have',
+      type: GraphQLString
+    },
+    actionsAll: {
+      description: 'Actions that we are required to have all of',
+      type: new GraphQLList(GraphQLString)
+    },
+    actionsAny: {
+      description: 'Actions that we are required to have at least one of',
+      type: new GraphQLList(GraphQLString)
+    }
+  },
+
+  handleActionArguments: (params) => {
+    let actionsAll = union(
+      params.args.action ? [params.args.action] : [],
+      params.args.actionsAll || [],
+      params.required || []);
+    if(actionsAll) {
+      params.wheres.push(Util.requireAllActions(
+        params.user_id,
+        params.tableName,
+        params.fieldName,
+        actionsAll
+      ));
+    }
+    if(params.args.actionsAny) {
+      let actionsAny = difference(args.actionsAny, actionsAll);
+      params.wheres.push(Util.requireAnyActions(
+        params.user_id,
+        params.tableName,
+        params.fieldName,
+        actionsAny
+      ));
+    }
   }
+
 };
 
 export default Util;
