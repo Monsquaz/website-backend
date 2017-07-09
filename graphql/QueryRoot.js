@@ -29,7 +29,7 @@ export default new GraphQLObjectType({
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, sql => {
           return db.call(sql);
-        }, { dialect: "mysql" })
+        }, { dialect: "mysql", minify: "true" })
       }
     },
     users: {
@@ -41,12 +41,14 @@ export default new GraphQLObjectType({
         }
       },
       where: (usersTable, args, context) => {
-        if(args.id) return `${usersTable}.id = ${args.id}`;
+        let wheres = [];
+        if(args.id) wheres.push(`${usersTable}.id = ${args.id}`);
+        return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, sql => {
           return db.call(sql);
-        }, { dialect: "mysql" })
+        }, { dialect: "mysql", minify: "true" })
       }
     }
   })
