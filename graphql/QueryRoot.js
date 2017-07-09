@@ -13,11 +13,36 @@ import Administrable from './Administrable';
 import User from './User';
 import Util from './Util';
 import AdministrablesTree from './AdministrablesTree';
+import Action from './Action';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
   name: 'Query',
   fields: () => ({
+    actions: {
+      type: new GraphQLList(Action),
+      args: {
+        id: {
+          description: 'The action id',
+          type: GraphQLInt
+        },
+        name: {
+          description: 'The action name',
+          type: GraphQLString
+        },
+      },
+      where: async (actionsTable, args, context) => {
+        let wheres = [];
+        if(args.id)   wheres.push(db.knex.raw(`${actionsTable}.id = ?`, args.id));
+        if(args.name) wheres.push(db.knex.raw(`${actionsTable}.name = ?`, args.name));
+        return wheres.join(' AND ');
+      },
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, {}, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" })
+      }
+    },
     menus: {
       type: new GraphQLList(Menu),
       args: {
@@ -29,7 +54,7 @@ export default new GraphQLObjectType({
       },
       where: (menusTable, args, context) => {
         let wheres = [];
-        if(args.id) wheres.push(`${menusTable}.id = ${args.id}`);
+        if(args.id) wheres.push(db.knex.raw(`${menusTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -59,7 +84,7 @@ export default new GraphQLObjectType({
         let wheres = [
           'depth = 1'
         ];
-        if(args.id) wheres.push(`${treeTable}.id = ${args.id}`);
+        if(args.id) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -87,7 +112,7 @@ export default new GraphQLObjectType({
       },
       where: (administrablesTable, args, context) => {
         let wheres = [];
-        if(args.id) wheres.push(`${administrablesTable}.id = ${args.id}`);
+        if(args.id) wheres.push(db.knex.raw(`${administrablesTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -115,7 +140,7 @@ export default new GraphQLObjectType({
       },
       where: (usersTable, args, context) => {
         let wheres = [];
-        if(args.id) wheres.push(`${usersTable}.id = ${args.id}`);
+        if(args.id) wheres.push(db.knex.raw(`${usersTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],

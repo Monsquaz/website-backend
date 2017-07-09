@@ -10,10 +10,10 @@ import db from '../db';
 import Translation from './Translation';
 import Util from './Util';
 
-export default new GraphQLObjectType({
-   description: 'A user',
-   name: 'User',
-   sqlTable: 'users',
+const Action = new GraphQLObjectType({
+   description: 'An action',
+   name: 'Action',
+   sqlTable: 'actions',
    uniqueKey: 'id',
    fields: () => ({
      id: {
@@ -22,7 +22,7 @@ export default new GraphQLObjectType({
      name: {
        type: GraphQLString
      },
-     administrable: Util.administrableField('administrable_id'),
-     actions: Util.actionsField('administrable_id')
+     description: Util.translationField('description_translatable_id')
    })
  });
+export default Action;

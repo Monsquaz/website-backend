@@ -6,6 +6,8 @@ import {
 
 import Translation from './Translation';
 import Acl from './Acl';
+import Administrable from './Administrable';
+
 import {
   union,
   difference
@@ -33,6 +35,13 @@ const Util = {
         }
       ]
     }
+  }),
+
+  administrableField: (fieldName) => ({
+    type: Administrable,
+    sqlTable: 'administrable',
+    sqlJoin: (menusTable, administrablesTable, args) =>
+      `${menusTable}.${fieldName} = ${administrablesTable}.id`
   }),
 
   treeField: (tableName, ItemType, parentKey) => ({
@@ -69,6 +78,11 @@ const Util = {
       type: new GraphQLList(Acl),
       sqlJoin: (thisTable, aclTable, args, context) => {
         let joinStr = `${thisTable}.${fieldName} = ${aclTable}.administrable_id AND (${aclTable}.user_id = 1`;
+        /*
+          TODO: Add argument to let us see which actions another user has on the administrable.
+          What do we need to be allowed to do this => action "viewActions" on the administrable.
+          It's OK to return empty list of actions if we lack the permission. 
+        */
         if(context.user_id) joinStr += ` OR ${derivedTable}.user_id = ${context.user_id}`;
         joinStr += ')';
         return joinStr;
