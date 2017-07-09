@@ -10,6 +10,7 @@ import Acl from './Acl';
 import db from '../db';
 
 export default {
+
   translationField: (fieldName) => ({
     type: new GraphQLList(Translation),
     args: {
@@ -29,6 +30,7 @@ export default {
       ]
     }
   }),
+
   treeField: (tableName, ItemType) => ({
     type: new GraphQLList(ItemType),
     args: {
@@ -54,6 +56,7 @@ export default {
       return joinStr;
     }
   }),
+
   actionsField: (fieldName) => {
     let result = {
       type: new GraphQLList(Acl),
@@ -66,6 +69,7 @@ export default {
     };
     return result;
   },
+
   requireAction: (userId, tableName, fieldName, actionName) => {
     let userIdChecks = ['user_id = 1']; // Guest
     // TODO: Escape userId
@@ -73,6 +77,7 @@ export default {
     // TODO: Escape actionName
     return `'${actionName}' IN (SELECT action_name FROM acl WHERE (${userIdChecks.join(' OR ')}) AND administrable_id=${tableName}.${fieldName})`
   },
+
   requireAllActions: (userId, tableName, fieldName, actionNames) => {
     let userIdChecks = ['user_id = 1']; // Guest
     // TODO: Escape userId
@@ -85,6 +90,7 @@ export default {
                AND action_name = ANY(SELECT ${actionNames.map((e) => `'${e}'`).join(',')})
              ) = ${actionNames.length}`;
   },
+  
   requireAtLeastOneAction: (userId, tableName, fieldName, actionNames) => {
     let userIdChecks = ['user_id = 1']; // Guest
     // TODO: Escape userId
