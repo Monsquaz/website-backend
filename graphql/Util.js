@@ -5,7 +5,7 @@ import {
 } from 'graphql';
 
 import Translation from './Translation';
-import ActionMapping from './ActionMapping';
+import Acl from './Acl';
 
 import db from '../db';
 
@@ -56,14 +56,45 @@ export default {
   }),
   actionsField: (fieldName) => {
     let result = {
-      type: new GraphQLList(ActionMapping),
-      sqlJoin: (thisTable, derivedTable, args, context) => {
-        let joinStr = `${thisTable}.${fieldName} = ${derivedTable}.descendant AND (${derivedTable}.user_id = 1`;
+      type: new GraphQLList(Acl),
+      sqlJoin: (thisTable, aclTable, args, context) => {
+        let joinStr = `${thisTable}.${fieldName} = ${aclTable}.administrable_id AND (${aclTable}.user_id = 1`;
         if(context.user_id) joinStr += ` OR ${derivedTable}.user_id = ${context.user_id}`;
         joinStr += ')';
         return joinStr;
       }
     };
     return result;
+  },
+  requireAction: (userId, tableName, fieldName, actionName) => {
+    let userIdChecks = ['user_id = 1']; // Guest
+    // TODO: Escape userId
+    if(userId) userIdChecks.push('user_id = ' + userId);
+    // TODO: Escape actionName
+    return `'${actionName}' IN (SELECT action_name FROM acl WHERE (${userIdChecks.join(' OR ')}) AND administrable_id=${tableName}.${fieldName})`
+  },
+  requireAllActions: (userId, tableName, fieldName, actionNames) => {
+    let userIdChecks = ['user_id = 1']; // Guest
+    // TODO: Escape userId
+    if(userId) userIdChecks.push('user_id = ' + userId);
+    // TODO: Escape actionNames
+    return `(SELECT COUNT(*)
+             FROM acl
+             WHERE (${userIdChecks.join(' OR ')})
+               AND administrable_id=${tableName}.${fieldName}
+               AND action_name = ANY(SELECT ${actionNames.map((e) => `'${e}'`).join(',')})
+             ) = ${actionNames.length}`;
+  },
+  requireAtLeastOneAction: (userId, tableName, fieldName, actionNames) => {
+    let userIdChecks = ['user_id = 1']; // Guest
+    // TODO: Escape userId
+    if(userId) userIdChecks.push('user_id = ' + userId);
+    // TODO: Escape actionNames
+    return `(SELECT COUNT(*)
+             FROM acl
+             WHERE (${userIdChecks.join(' OR ')})
+               AND administrable_id=${tableName}.${fieldName}
+               AND action_name = ANY(SELECT ${actionNames.map((e) => `'${e}'`).join(',')})
+             ) > 0`;
   }
 };
