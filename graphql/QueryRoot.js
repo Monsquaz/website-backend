@@ -1,5 +1,6 @@
 import {
   GraphQLObjectType,
+  GraphQLError,
   GraphQLList,
   GraphQLNonNull,
   GraphQLString,
@@ -156,7 +157,7 @@ export default new GraphQLObjectType({
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
-    }//,
+    }
     /*
     pages: {
       type: new GraphQLList(Page),
@@ -176,12 +177,42 @@ export default new GraphQLObjectType({
         categorySlug: {
           description: 'The category slug',
           type: GraphQLString
+        },
+        path: {
+          description: 'The url path',
+          type: GraphQLString
         }
         ...Util.actionArguments
       },
       where: (pagesTable, args, context) => {
 
         let wheres = [];
+
+        if(args.path) {
+          if(Object.keys(args).length > 1) {
+            throw new GraphQLError(`Filter on path can't be combined with other filters.`);
+          }
+          let parts = args.path.split('/').slice(1);
+          switch(parts.length) {
+            case 1:
+              if(Util.isInt(parts[0])) {
+                args.id = arts[0];
+              } else {
+                args.slug = parts[0];
+              }
+              break;
+            case 2:
+              if(parts[0] == 'tags') {
+                args.tag = parts[1];
+              } else {
+                args.categorySlug = parts[0];
+                args.slug = parts[1];
+              }
+              break;
+            default:
+              wheres.push('false');
+          }
+        }
 
         if(args.id) {
           wheres.push(db.knex.raw(`${pagesTable}.id = ?`, args.id));
@@ -197,7 +228,7 @@ export default new GraphQLObjectType({
             FROM translations
             WHERE translatable_id = ${pagesTable}.slug_translatable_id)`,
             args.slug));
-       }
+        }
 
         if(args.categorySlug) {
           wheres.push(db.knex.raw(`
@@ -206,8 +237,21 @@ export default new GraphQLObjectType({
               WHERE t.content = ?)`, args.categorySlug));
         }
 
-        // TODO: Can't fetch page if it is not published, UNLESS
-        //we can edit the page.
+        if(args.tag) {
+          wheres.push(db.knex.raw(`
+            ${pagesTable}.id IN (SELECT page_id FROM pages_tags AS pt
+              JOIN translations AS t ON t.translatable_id = pt.translatable_id
+              WHERE t.content = ?)`,
+            args.tag));
+        }
+
+        // We can fetch page if it's published or we have "edit" on it.
+        wheres.push(db.knex.raw(
+          `${pagesTable}.publish_date < ? AND ${pagesTable}.unpublish_date > ?
+           OR ${Util.requireAction(context.user_id, pagesTable, 'administrable_id', 'edit')}`,
+          db.knex.fn.now(),
+          db.knex.fn.now()
+        ));
 
         Util.handleActionArguments({
           args,
@@ -217,6 +261,7 @@ export default new GraphQLObjectType({
           tableName:  pagesTable,
           fieldName: 'administrable_id'
         });
+
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {

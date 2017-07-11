@@ -39,12 +39,6 @@ const Page = new GraphQLObjectType({
          ]
        }
      },
-     canonical: {
-       type: Page,
-       sqlTable: 'page',
-       sqlJoin: (thisTable, otherTable, args) =>
-         `${thisTable}.canonical_page_id = ${otherTable}.id`
-     }
      publishDate: {
        // TODO: Should only be visible to those who have "edit" on the page
        // How do we do it?
@@ -56,17 +50,12 @@ const Page = new GraphQLObjectType({
        // How do we do it?
        sqlColumn: 'unpublish_date'
      }
-     paths: {
-       type: new GraphQLList(PagePath)
-       sqlTable: 'pages_paths',
-       args: {
-         lang: GraphQLString
-       }
-       sqlJoin: (pagesTable, pathsTable, args) => {
-         let joins = [`${pagesTable}.id = ${pathsTable}.page_id`];
-         if(args.lang) joins.push(db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString());
-         return joins.join(' AND ');
-       }
+     path: {
+       type: PagePath
+       // 1. Avgör vilken page som skall användas. Om det finns en canonical, använd den.
+       // 2. Är sidan färsk? Använd page-slug rakt av om sådan finns
+       // 3. Är sidan inte färsk? Använd category-slug + page-slug om sådant finns, annars page-slug
+       sqlExpr: table => `IF(condition,alt1,alt2)`
      }
      menusItems: {}
      // Comment off END

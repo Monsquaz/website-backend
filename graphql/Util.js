@@ -17,6 +17,10 @@ import db from '../db';
 
 const Util = {
 
+  isInt: (v) => {
+    return typeof v === 'number' && (v % 1) === 0;
+  },
+
   translationField: (fieldName) => ({
     type: new GraphQLList(Translation),
     args: {
@@ -29,9 +33,9 @@ const Util = {
       sqlJoins: [
         (thisTable, translatablesTable, args) => `${thisTable}.${fieldName} = ${translatablesTable}.id`,
         (translatablesTable, translationsTable, args) => {
-          let joinStr = `${translatablesTable}.id = ${translationsTable}.translatable_id`;
-          if(args.lang) joinStr += db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString();
-          return joinStr;
+          let joins = [`${translatablesTable}.id = ${translationsTable}.translatable_id`];
+          if(args.lang) joins.push(db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString());
+          return joins.join(' AND ');
         }
       ]
     }
