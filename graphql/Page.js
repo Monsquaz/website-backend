@@ -3,7 +3,8 @@ import {
   GraphQLList,
   GraphQLString,
   GraphQLInt,
-  GraphQLFloat
+  GraphQLFloat,
+  GraphQLBoolean
 } from 'graphql';
 
 import db from '../db';
@@ -13,6 +14,8 @@ import Util from './Util';
 import Category from './Category';
 import Tag from './Tag';
 import PagePath from './PagePath';
+import MenuItem from './MenuItem';
+import View from './View';
 
 const Page = new GraphQLObjectType({
    description: 'A page',
@@ -23,7 +26,6 @@ const Page = new GraphQLObjectType({
      id: {
        type: GraphQLInt
      },
-     // Comment off START
      category: {
        type: Category,
        sqlTable: 'categories',
@@ -47,14 +49,12 @@ const Page = new GraphQLObjectType({
          `${thisTable}.canonical_page_id = ${otherTable}.id`
      },
      publishDate: {
-       // TODO: Should only be visible to those who have "edit" on the page
-       // How do we do it?
+       // TODO: Should be hidden unless user has "edit" on the page.
        type: GraphQLString,
        sqlColumn: 'publish_date'
      },
      unpublishDate: {
-       // TODO: Should only be visible to those who have "edit" on the page
-       // How do we do it?
+       // TODO: Should be hidden unless user has "edit" on the page.
        type: GraphQLString,
        sqlColumn: 'unpublish_date'
      },
@@ -72,10 +72,27 @@ const Page = new GraphQLObjectType({
          return joins.join(' AND ');
        }
      },
-     menusItems: {
-       type: GraphQLString // No, this should be a join
+     menuItems: {
+       type: new GraphQLList(MenuItem),
+       sqlTable: 'page',
+       sqlJoin: (thisTable, otherTable, args) =>
+         `${thisTable}.id = ${otherTable}.page_id`
      },
-     // Comment off END
+     comments: {
+       type: GraphQLBoolean
+     },
+     layoutView: {
+       type: View,
+       sqlTable: 'views',
+       sqlJoin: (thisTable, otherTable, args) =>
+         `${thisTable}.layout_view_id = ${otherTable}.id`
+     },
+     typeView: {
+       type: View,
+       sqlTable: 'views',
+       sqlJoin: (thisTable, otherTable, args) =>
+         `${thisTable}.type_view_id = ${otherTable}.id`
+     },
      slug: Util.translationField('slug_translatable_id'),
      title: Util.translationField('title_translatable_id'),
      content: Util.translationField('content_translatable_id'),

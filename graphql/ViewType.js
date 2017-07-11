@@ -10,19 +10,25 @@ import db from '../db';
 import Translation from './Translation';
 import Util from './Util';
 
-const PagePath = new GraphQLObjectType({
-   description: 'A page path',
-   name: 'PagePath',
-   sqlTable: 'pages_paths',
-   uniqueKey: ['page_id', 'lang'],
+const ViewType = new GraphQLObjectType({
+   description: 'A view type',
+   name: 'ViewType',
+   sqlTable: 'view_types',
+   uniqueKey: 'id',
    fields: () => ({
-     lang: {
+     id: {
+       type: GraphQLInt
+     },
+     schema: {
        type: GraphQLString
      },
-     path: {
+     schemaForm: {
+       type: GraphQLString
+     },
+     filename: {
        type: GraphQLString
      }
    })
  });
 
-export default PagePath;
+export default ViewType;
