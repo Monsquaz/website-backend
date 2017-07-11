@@ -1,7 +1,7 @@
 
 exports.up = function(knex, Promise) {
   return knex.schema.raw(`CREATE VIEW pages_paths AS
-    SELECT IF(
+    SELECT p.id AS page_id, IF(
       NOW() < DATE_ADD(p.publish_date, INTERVAL 30 DAY),
       CONCAT(
         '/',

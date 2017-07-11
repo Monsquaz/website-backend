@@ -15,6 +15,7 @@ import User from './User';
 import Util from './Util';
 import AdministrablesTree from './AdministrablesTree';
 import Action from './Action';
+import Page from './Page';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -157,8 +158,7 @@ export default new GraphQLObjectType({
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
-    }
-    /*
+    },
     pages: {
       type: new GraphQLList(Page),
       args: {
@@ -181,7 +181,7 @@ export default new GraphQLObjectType({
         path: {
           description: 'The url path',
           type: GraphQLString
-        }
+        },
         ...Util.actionArguments
       },
       where: (pagesTable, args, context) => {
@@ -269,6 +269,6 @@ export default new GraphQLObjectType({
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
-    }*/
+    }
   })
 });
