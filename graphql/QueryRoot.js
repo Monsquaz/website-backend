@@ -31,7 +31,7 @@ export default new GraphQLObjectType({
           type: GraphQLString
         },
       },
-      where: async (actionsTable, args, context) => {
+      where: (actionsTable, args, context) => {
         let wheres = [];
         if(args.id)   wheres.push(db.knex.raw(`${actionsTable}.id = ?`, args.id));
         if(args.name) wheres.push(db.knex.raw(`${actionsTable}.name = ?`, args.name));
@@ -156,6 +156,74 @@ export default new GraphQLObjectType({
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
-    }
+    }//,
+    /*
+    pages: {
+      type: new GraphQLList(Page),
+      args: {
+        id: {
+          description: 'The page id',
+          type: GraphQLInt
+        },
+        categoryId: {
+          description: 'The category id',
+          type: GraphQLInt
+        },
+        slug: {
+          description: 'The page slug',
+          type: GraphQLString
+        },
+        categorySlug: {
+          description: 'The category slug',
+          type: GraphQLString
+        }
+        ...Util.actionArguments
+      },
+      where: (pagesTable, args, context) => {
+
+        let wheres = [];
+
+        if(args.id) {
+          wheres.push(db.knex.raw(`${pagesTable}.id = ?`, args.id));
+        }
+
+        if(args.categoryId) {
+          wheres.push(db.knex.raw(`${pagesTable}.category_id = ?`, args.categoryId));
+        }
+
+        if(args.slug) {
+          wheres.push(db.knex.raw(`
+            ? IN (SELECT content
+            FROM translations
+            WHERE translatable_id = ${pagesTable}.slug_translatable_id)`,
+            args.slug));
+       }
+
+        if(args.categorySlug) {
+          wheres.push(db.knex.raw(`
+            ${pagesTable}.category_id IN (SELECT c.id FROM categories AS c
+              JOIN translations AS t ON t.translatable_id = c.translatable_id
+              WHERE t.content = ?)`, args.categorySlug));
+        }
+
+        // TODO: Can't fetch page if it is not published, UNLESS
+        //we can edit the page.
+
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    context.user_id,
+          tableName:  pagesTable,
+          fieldName: 'administrable_id'
+        });
+        return wheres.join(' AND ');
+      },
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, {}, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" })
+      }
+    }*/
   })
 });

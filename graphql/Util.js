@@ -40,8 +40,8 @@ const Util = {
   administrableField: (fieldName) => ({
     type: Administrable,
     sqlTable: 'administrable',
-    sqlJoin: (menusTable, administrablesTable, args) =>
-      `${menusTable}.${fieldName} = ${administrablesTable}.id`
+    sqlJoin: (thisTable, administrablesTable, args) =>
+      `${thisTable}.${fieldName} = ${administrablesTable}.id`
   }),
 
   treeField: (tableName, ItemType, parentKey) => ({
@@ -81,7 +81,7 @@ const Util = {
         /*
           TODO: Add argument to let us see which actions another user has on the administrable.
           What do we need to be allowed to do this => action "viewActions" on the administrable.
-          It's OK to return empty list of actions if we lack the permission. 
+          It's OK to return empty list of actions if we lack the permission.
         */
         if(context.user_id) joinStr += ` OR ${derivedTable}.user_id = ${context.user_id}`;
         joinStr += ')';
