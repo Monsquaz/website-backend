@@ -42,13 +42,12 @@ const CreateUser = {
       // Validera alla fält
       // Kolla så att inte email eller name är upptagna.
 
-      // ------ Administrable-hantering ------
-      // EVENTUELLT - Kräv parentAdministrableId, och kräv action "createUsers" på denna! Så att vi inte möjliggör för rörig struktur
-      // Om användaren matat in en parentAdministrableId, kolla så att den finns.
-      //   Kolla även att användaren har rätt att skapa sidor under denna administrable
-      // Skapa administrable för den här sidan. Sätt namnet utifrån title.
-      // Skapa administrables_administrables-självreferens.
-      // Om parentAdministrableId angetts, lägg till noden även där i administrables_administrables
+      let administrableId = await Util.createAdministrable({
+        userId:                   context.user_id,
+        parentAdministrableId:    args.parentAdministrableId,
+        nameTranslations:         titleTranslations,
+        requiredActionsOnParent:  ['createUser']
+      });
 
       // Skapa användaren - sätt is_verified till false och generera verification_code
       // Skapa login

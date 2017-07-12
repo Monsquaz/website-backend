@@ -7,6 +7,9 @@ import {
 import Translation from './Translation';
 import Acl from './Acl';
 import Administrable from './Administrable';
+import {
+  uniq
+} from 'lodash';
 
 import {
   union,
@@ -19,6 +22,20 @@ const Util = {
 
   isInt: (v) => {
     return typeof v === 'number' && (v % 1) === 0;
+  },
+
+  isValidSlug: (str) => {
+    let pattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+    return pattern.test(str);
+  },
+
+  slugify: (str) => {
+    return str.toString().toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
   },
 
   translationField: (fieldName) => ({
@@ -174,6 +191,51 @@ const Util = {
     }
   },
 
+  deleteTranslatable: async (id) => {
+    await db.knex.transaction(async (t) => {
+      await db.knex('translations')
+        .where({translatable_id: id})
+        .delete();
+      await db.knex('translatable')
+        .where({id})
+        .delete();
+    });
+  },
+
+  deleteAdministrable: async (params) => {
+
+    await db.knex.transaction(async (t) => {
+      let translatableId = await db.knex('administrables')
+        .where({id: params.id})
+        .select('name_translatable_id');
+      await Util.deleteTranslatable(translatableId);
+
+      let canDelete = await Util.hasActionOnAdministrable(params.userId, params.id, 'delete');
+
+      if(!canDelete) {
+        throw new GraphQLError('Missing delete action on administrable.');
+      }
+
+      let hasChildren = await db.knex.raw(`
+        SELECT COUNT(*) > 0 FROM administrables_administrables
+        WHERE ancestor = ? AND descendant != ?
+        `, [params.id, params.id])[0];
+
+      if(hasChildren) {
+        throw new GraphQLError('Administrable has children. Delete them first.');
+      }
+
+      await db.knex('administrables_administrables')
+        .where({descendant: params.id})
+        .delete();
+
+      await db.knex('administrables')
+        .where({id: params.id})
+        .delete();
+
+    });
+  },
+
   updateAdministrable: async (params) => {
     await db.knex.transaction(async (t) => {
 
@@ -198,23 +260,24 @@ const Util = {
 
       if(params.parentAdministrableId) {
 
-        let canCreatePages = await db.knex.raw(
-          `SELECT COUNT(*)
-           FROM administrables
-           WHERE administrables.id = ? AND ${Util.requireAllActions (
-             params.userId, 'administrables', 'id', ['createPages']
-           )}`, params.parentAdministrableId);
-
-        if(!canCreatePages) {
-          throw new GraphQLError('Not allowed to create pages on new parent.');
+        if(params.requiredActionsOnParent) {
+          let hasRequiredActionsOnParent = await Util.hasAllActionsOnAdministrable(
+            params.userId, params.parentAdministrableId, params.requiredActionsOnParent
+          );
+          if(!hasRequiredActionsOnParent) {
+            throw new GraphQLError(`Missing one or more actions on parent: ${params.requiredActionsOnParent.join(', ')}`);
+          }
+        }
+        if(params.requiredActions) {
+          let hasActions = await Util.hasAllActionsOnAdministrable(
+            params.userId, params.id, params.requiredActions
+          );
+          if(!hasActions) {
+            throw new GraphQLError(`Missing one or more actions: ${params.requiredActions.join(', ')}`);
+          }
         }
 
-        let canMovePage = await db.knex.raw(
-          `SELECT COUNT(*)
-           FROM administrables
-           WHERE administrables.id = ? AND ${Util.requireAllActions (
-             params.userId, 'administrables', 'id', ['move']
-           )}`, params.id);
+        let canMovePage = await Util.hasActionOnAdministrable(params.userId, params.id, 'move');
 
         if(!canMovePage) {
          throw new GraphQLError('Not allowed to move administrable.');
@@ -223,7 +286,7 @@ const Util = {
         await db.knex.raw(
           `DELETE FROM administrables_administrables WHERE descendant = ?`, [params.id]
         );
-        
+
         await db.knex.raw(`
           INSERT INTO administrables_administrables (depth, ancestor, descendant)
             SELECT depth+1, ancestor, ? FROM administrables_administrables
@@ -235,34 +298,62 @@ const Util = {
     });
   },
 
+  createTranslatable: async (translations) => {
+    let result;
+    await db.knex.transaction(async (t) => {
+      let langs = translations.map(e => e.lang);
+      let uniqLangs = uniq(langs);
+      if(langs.length != uniqLangs.length) {
+        throw new GraphQLError('Multiple translations with the same language.');
+      }
+      await db.knex('translatables').insert({});
+      let id = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
+      if(translations) {
+        let translations = [];
+        for(translation of translations) {
+          translation.translatable_id = id;
+          translations.push(translation);
+        }
+        await db.knex('translations').insert(translations);
+      }
+      result = id;
+    });
+    return result;
+  },
+
+  updateTranslatable: async (id, translations) => {
+    await db.knex.transaction(async (t) => {
+      let langs = translations.map(e => e.lang);
+      let uniqLangs = uniq(langs);
+      if(langs.length != uniqLangs.length) {
+        throw new GraphQLError('Multiple translations with the same language.');
+      }
+      await db.knex('translations')
+        .where({translatable_id: id})
+        .whereIn('lang', uniqLangs)
+        .delete();
+      await db.knex('translations')
+        .insert(translations.map(e => ({translatable_id: id, ...e})));
+    });
+  },
+
   createAdministrable: async (params) => {
 
     let administrableId;
     await db.knex.transaction(async (t) => {
 
-      let canCreatePages = await db.knex.raw(
-        `SELECT COUNT(*)
-         FROM administrables
-         WHERE administrables.id = ? AND ${Util.requireAllActions (
-           params.userId, 'administrables', 'id', ['createPages']
-         )}`, params.parentAdministrableId);
+      if(params.requiredActionsOnParent) {
 
-      if(!canCreatePages) {
-        throw new GraphQLError('Not allowed to create pages on administrable.');
-      }
+        let hasRequiredActionsOnParent = await Util.hasAllActionsOnAdministrable(
+          params.userId, params.parentAdministrableId, params.requiredActionsOnParent
+        );
 
-      await db.knex('translatables').insert({});
-
-      let translatableId = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
-
-      if(params.nameTranslations) {
-        let translations = [];
-        for(translation of params.nameTranslations) {
-          translation.translatable_id = translatableId;
-          translations.push(translation);
+        if(!hasRequiredActionsOnParent) {
+          throw new GraphQLError(`Missing one or more actions: ${params.requiredActionsOnParent.join(', ')}`);
         }
-        await db.knex('translations').insert(translations);
       }
+
+      let translatableId = Util.createTranslatable(params.nameTranslations);
 
       await db.knex('administrables').insert({
         'name_translatable_id': translatableId,
@@ -289,6 +380,33 @@ const Util = {
     });
 
     return administrableId;
+  },
+
+  hasActionOnAdministrable: async (userId, administrableId,  action) => {
+    return await db.knex.raw(
+      `SELECT COUNT(*) > 0
+       FROM administrables
+       WHERE administrables.id = ? AND ${Util.requireAction (
+         userId, 'administrables', 'id', action
+       )}`, administrableId)[0];
+  },
+
+  hasAllActionsOnAdministrable: async (userId, administrableId,  actions) => {
+    return await db.knex.raw(
+      `SELECT COUNT(*) > 0
+       FROM administrables
+       WHERE administrables.id = ? AND ${Util.requireAllActions (
+         userId, 'administrables', 'id', actions
+       )}`, administrableId)[0];
+  },
+
+  hasAnyActionsOnAdministrable: async (userId, administrableId,  actions) => {
+    return await db.knex.raw(
+      `SELECT COUNT(*) > 0
+       FROM administrables
+       WHERE administrables.id = ? AND ${Util.requireAnyActions (
+         userId, 'administrables', 'id', actions
+       )}`, administrableId)[0];
   }
 
 };

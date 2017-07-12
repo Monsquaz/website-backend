@@ -26,11 +26,24 @@ const DeletePage = {
     let status;
     await db.knex.transaction(async (t) => {
       if(!args.id) throw new GraphQLError('No input supplied');
-      // Kontrollera att vi har "delete"-rättighet på sida
-      // Ta bort koppling mellan taggar och sidan
-      // Ta bort sidan
-      // Ta bort administrable:n
-      // Ta bort administralbe_administrables
+
+      let administrableId = await db.knex('pages')
+        .where({id: args.id})
+        .select('administrable_id');
+
+      await db.knex('pages_tags')
+        .where({page_id: args.id})
+        .delete();
+
+      await db.knex('pages')
+        .where({id: args.id})
+        .delete();
+
+      await Util.deleteAdministrable({
+        id:     administrableId,
+        userId: context.user_id
+      });
+
     });
     return status;
   }
