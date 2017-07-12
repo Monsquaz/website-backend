@@ -60,11 +60,13 @@ const UpdatePage = {
       //  Kolla även att användaren har rätt att editera canonicalPage-sidan
       // Om användaren matat in en layoutViewId, kolla så att den finns.
       // Om användaren matat in en typeViewId, kolla så att den finns.
-      // Om användaren matat in en NY parentAdministrableId, kolla så att den finns.
-      //   Kolla även att användaren har rätt att skapa sidor under denna administrable
-      //   Om parentAdministrableId ändrats,
-      //     kräv att användaren har "move" på den befintliga administrable:n
-      //     ta bort befintliga kopplingar och lägg till noden även där i administrables_administrables
+
+      await Util.updateAdministrable({
+        userId:                 context.user_id,
+        parentAdministrableId:  args.parentAdministrableId,
+        nameTranslations:       titleTranslations
+      });
+
       // Skapa alla taggar som inte redan är skapade
       // Lägg till kopplade taggar som inte redan är kopplade
       // Uppdatera sidan!

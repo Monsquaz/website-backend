@@ -34,7 +34,7 @@ const CreatePage = {
           comments:                 {type: GraphQLBoolean},
           layoutViewId:             {type: new GraphQLNonNull(GraphQLInt)},
           typeViewId:               {type: new GraphQLNonNull(GraphQLInt)},
-          parentAdministrableId:    {type: GraphQLInt},
+          parentAdministrableId:    {type: new GraphQLNonNull(GraphQLInt)},
           tags:                     {type: new GraphQLList(GraphQLString)}
         })
       })
@@ -56,13 +56,11 @@ const CreatePage = {
       // Om användaren matat in en layoutViewId, kolla så att den finns.
       // Om användaren matat in en typeViewId, kolla så att den finns.
 
-      // ------ Administrable-hantering ------
-      // EVENTUELLT - Kräv parentAdministrableId, och kräv action "createPages" på denna! Så att vi inte möjliggör för rörig struktur
-      // Om användaren matat in en parentAdministrableId, kolla så att den finns.
-      //   Kolla även att användaren har rätt att skapa sidor under denna administrable
-      // Skapa administrable för den här sidan. Sätt namnet utifrån title.
-      // Skapa administrables_administrables-självreferens.
-      // Om parentAdministrableId angetts, lägg till noden även där i administrables_administrables
+      let administrableId = await Util.createAdministrable({
+        userId:                 context.user_id,
+        parentAdministrableId:  args.parentAdministrableId,
+        nameTranslations:       titleTranslations
+      });
 
       // Skapa alla taggar som inte redan är skapade
       // Lägg till kopplade taggar

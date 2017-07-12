@@ -172,6 +172,123 @@ const Util = {
         actionsAny
       ));
     }
+  },
+
+  updateAdministrable: async (params) => {
+    await db.knex.transaction(async (t) => {
+
+      if(params.nameTranslations) {
+        let translatableId = await db.knex('administrable')
+          .where({id: params.id})
+          .select('name_translatable_id');
+        let translations = [];
+        let langs = [];
+        for(translation of params.nameTranslations) {
+          langs.push(translation.lang);
+          translation.translatable_id = translatableId;
+          translations.push(translation);
+        }
+        await db.knex('translations')
+          .where({translatable_id: translatableId})
+          .andWhere(() => {
+            this.whereIn('lang', langs);
+          }).delete();
+        await db.knex('translations').insert(translations);
+      }
+
+      if(params.parentAdministrableId) {
+
+        let canCreatePages = await db.knex.raw(
+          `SELECT COUNT(*)
+           FROM administrables
+           WHERE administrables.id = ? AND ${Util.requireAllActions (
+             params.userId, 'administrables', 'id', ['createPages']
+           )}`, params.parentAdministrableId);
+
+        if(!canCreatePages) {
+          throw new GraphQLError('Not allowed to create pages on new parent.');
+        }
+
+        let canMovePage = await db.knex.raw(
+          `SELECT COUNT(*)
+           FROM administrables
+           WHERE administrables.id = ? AND ${Util.requireAllActions (
+             params.userId, 'administrables', 'id', ['move']
+           )}`, params.id);
+
+        if(!canMovePage) {
+         throw new GraphQLError('Not allowed to move administrable.');
+        }
+
+        await db.knex.raw(
+          `DELETE FROM administrables_administrables WHERE descendant = ?`, [params.id]
+        );
+        
+        await db.knex.raw(`
+          INSERT INTO administrables_administrables (depth, ancestor, descendant)
+            SELECT depth+1, ancestor, ? FROM administrables_administrables
+            WHERE descendant = ?
+            UNION ALL SELECT 0, ?, ?
+        `, [params.id, params.parentAdministrableId, params.id, params.id]);
+
+      }
+    });
+  },
+
+  createAdministrable: async (params) => {
+
+    let administrableId;
+    await db.knex.transaction(async (t) => {
+
+      let canCreatePages = await db.knex.raw(
+        `SELECT COUNT(*)
+         FROM administrables
+         WHERE administrables.id = ? AND ${Util.requireAllActions (
+           params.userId, 'administrables', 'id', ['createPages']
+         )}`, params.parentAdministrableId);
+
+      if(!canCreatePages) {
+        throw new GraphQLError('Not allowed to create pages on administrable.');
+      }
+
+      await db.knex('translatables').insert({});
+
+      let translatableId = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
+
+      if(params.nameTranslations) {
+        let translations = [];
+        for(translation of params.nameTranslations) {
+          translation.translatable_id = translatableId;
+          translations.push(translation);
+        }
+        await db.knex('translations').insert(translations);
+      }
+
+      await db.knex('administrables').insert({
+        'name_translatable_id': translatableId,
+        'created': db.knex.fn.now(),
+        'updated': db.knex.fn.now(),
+        'created_by': params.userId,
+        'changed_by': params.userId
+      });
+
+      administrableId = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
+
+      await db.knex.raw(`
+        INSERT INTO administrables_administrables (depth, ancestor, descendant)
+          SELECT depth+1, ancestor, ? FROM administrables_administrables
+          WHERE descendant = ?
+          UNION ALL SELECT 0, ?, ?
+      `, [
+        administrableId,
+        params.parentAdministrableId,
+        administrableId,
+        administrableId
+      ]);
+
+    });
+
+    return administrableId;
   }
 
 };
