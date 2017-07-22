@@ -46,7 +46,7 @@ let createTables = function(knex, Promise){
     })
     .createTable('logins', function(table){
       table.increments();
-      table.integer('user_id').unsigned();
+      table.integer('user_id').unsigned().unique();
       table.string('hash').notNullable();
     })
     .createTable('oauth_resources', function(table){

@@ -16,7 +16,6 @@ import Page from '../Page';
 import joinMonster from 'join-monster';
 import db from '../../db';
 import validator from 'validator';
-import moment from 'moment';
 
 const CreatePage = {
   type: Page,

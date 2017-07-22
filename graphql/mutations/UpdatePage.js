@@ -102,37 +102,32 @@ const UpdatePage = {
         requiredActionsOnParent:  ['createPage']
       }, t);
 
-      if(input.canonicalPageId) {
-        await Util.existanceAndActionCheck({
+      await Util.existanceAndActionChecks([
+        {
           tableName:  'pages',
           entityName: 'Canonical page',
           id:         input.canonicalPageId,
           actions:    ['edit']
-        }, t);
-      }
-
-      if(input.categoryId) {
-        await Util.existanceAndActionCheck({
+        },
+        {
           tableName:  'categories',
           entityName: 'Category',
           id:         input.categoryId,
           actions:    ['use']
-        }, t);
-      }
-
-      await Util.existanceAndActionCheck({
-        tableName:  'view',
-        entityName: 'Layout view',
-        id:         input.layoutViewId,
-        actions:    ['use']
-      }, t);
-
-      await Util.existanceAndActionCheck({
-        tableName:  'view',
-        entityName: 'Type view',
-        id:         input.typeViewId,
-        actions:    ['use']
-      }, t);
+        },
+        {
+          tableName:  'views',
+          entityName: 'Layout view',
+          id:         input.layoutViewId,
+          actions:    ['use']
+        },
+        {
+          tableName:  'views',
+          entityName: 'Type view',
+          id:         input.typeViewId,
+          actions:    ['use']
+        }
+      ], t);
 
       await Util.updateAdministrable({
         id:                     args.id,

@@ -20,20 +20,35 @@ const VerifyUser = {
   type: User,
   args: {
     verificationCode: {
-      type: GraphQLString
+      type: new GraphQLNonNull(GraphQLString)
     }
   },
-  where: async (pagesTable, args, context) => {
-    let user_id;
+  where: async (usersTable, args, context) => {
+    let userId;
     await db.knex.transaction(async (t) => {
-      let input = args.input;
-      if(!input) throw new GraphQLError('No input supplied');
-      // Kolla om det finns en user med den verifieringskoden.
-      // Om det inte finns en user => kasta ogiltig verifieringskoden
-      // Om användaren redan är verifierad => kasta användare redan verifierad
-      // Sätt användaren som verifierad och sätt user_id till användarid:t
+
+      let users = await t('users')
+        .where({verification_code: args.verificationCode})
+        .select('id', 'is_verified');
+
+      if(users.length == 0) {
+        throw new GraphQLError('Invalid verification code');
+      }
+
+      let user = users[0];
+
+      if(user.is_verified) {
+        throw new GraphQLError('User is already verified');
+      }
+
+      await t('users')
+        .where({id: user.id})
+        .update({is_verified: true})
+
+      userId = user.id;
+
     });
-    return `${usersTable}.id = ${insert_id}`;
+    return `${usersTable}.id = ${userId}`;
   },
   resolve: (parent, args, context, resolveInfo) => {
     return joinMonster(resolveInfo, {}, sql => {
