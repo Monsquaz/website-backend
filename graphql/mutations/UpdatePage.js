@@ -49,30 +49,33 @@ const UpdatePage = {
       let input = args.input;
       if(!input) throw new GraphQLError('No input supplied');
 
-      if(args.publishDate && !!Date.parse(args.publishDate)) {
-        throw new GraphQLError(`Not a valid publishDate: ${args.publishDate}`);
+      if(input.publishDate && !!Date.parse(input.publishDate)) {
+        throw new GraphQLError(`Not a valid publishDate: ${input.publishDate}`);
       }
 
-      if(args.unpublishDate && !!Date.parse(args.publishDate)) {
-        throw new GraphQLError(`Not a valid unpublishDate: ${args.unpublishDate}`);
+      // TODO: Check that publishDate has not yet occured!
+      // TODO: Check that unpublishDate has not yet occurred!
+
+      if(input.unpublishDate && !!Date.parse(input.publishDate)) {
+        throw new GraphQLError(`Not a valid unpublishDate: ${input.unpublishDate}`);
       }
 
-      let page = await db.knex('pages').where({id: args.id}).select('*')[0];
+      let page = await t('pages').where({id: args.id}).select('*')[0];
       if(!page) {
         throw new GraphQLError(`Page does not exist.`);
       }
 
       // TODO: If slug was changed for a language - how could we handle redirects?
-      if(args.slug) {
-        for(translation of args.slug) {
+      if(input.slug) {
+        for(translation of input.slug) {
           if(!Util.isValidSlug(translation)) {
             throw new GraphQLError(`'${translation}' is not a valid slug.`);
           }
         }
-        let conflictingSlugTranslations = await db.knex('pages')
+        let conflictingSlugTranslations = await t('pages')
           .innerJoin('translations', 'pages.translatable_id', 'translations.translatable_id')
-          .whereNot({'translations.translatable_id': page.slug_translatable_id})
-          .whereIn('translations.content',  args.slug.map(e => e.content))
+          .whereNot({'translations.translatable_id': input.slug_translatable_id})
+          .whereIn('translations.content',  input.slug.map(e => e.content))
           .select('translation.content');
         if(conflictingSlugTranslations) {
           throw new GraphQLError(
@@ -80,108 +83,109 @@ const UpdatePage = {
                ${conflictingSlugTranslations.map(e => e.content).join(', ')}`
           );
         }
-        Util.updateTranslatable(page.slug_translatable_id, args.slug);
+        Util.updateTranslatable(page.slug_translatable_id, input.slug, t);
       }
 
       if(args.title) {
-        Util.updateTranslatable(page.title_translatable_id, args.title);
+        Util.updateTranslatable(page.title_translatable_id, input.title, t);
       }
 
       if(args.content) {
-        Util.updateTranslatable(page.content_translatable_id, args.content);
+        Util.updateTranslatable(page.content_translatable_id, input.content, t);
       }
 
       await Util.updateAdministrable({
         userId:                   context.user_id,
-        parentAdministrableId:    args.parentAdministrableId,
+        parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         titleTranslations,
         requiredActions:          ['move'],
         requiredActionsOnParent:  ['createPage']
-      });
+      }, t);
 
-      if(args.canonicalPageId) {
-        let canonicalPage = await db.knex('pages')
-          .where({id: args.canonicalPageId})
+      if(input.canonicalPageId) {
+        let canonicalPage = await t('pages')
+          .where({id: input.canonicalPageId})
           .select('*');
         if(!canonicalPage) {
-          throw new GraphQLError(`Canonical page ${args.canonicalPageId} doesn't exist.`);
+          throw new GraphQLError(`Canonical page ${input.canonicalPageId} doesn't exist.`);
         }
         let canEditCanonicalPage = await Util.hasActionOnAdministrable(
           context.user_id,
           canonicalPage.administrable_id,
-          'edit'
+          'edit',
+          t
         );
         if(!canEditCanonicalPage) {
           throw new GraphQLError(`Not authorized to edit canonical page.`);
         }
       }
 
-      if(args.categoryId) {
-        let categoryExists = await db.knex('categories')
-          .where({id: args.categoryId})
+      if(input.categoryId) {
+        let categoryExists = await t('categories')
+          .where({id: input.categoryId})
           .count('*');
         if(!categoryExists) {
-          throw new GraphQLError(`Category ${args.categoryId} doesn't exist.`);
+          throw new GraphQLError(`Category ${input.categoryId} doesn't exist.`);
         }
       }
 
-      let layoutViewExists = await db.knex('layout_views')
-        .where({id: args.layoutViewId})
+      let layoutViewExists = await t('layout_views')
+        .where({id: input.layoutViewId})
         .count('*');
 
       if(!layoutViewExists) {
-        throw new GraphQLError(`Layout view ${args.layoutViewId} doesn't exist.`);
+        throw new GraphQLError(`Layout view ${input.layoutViewId} doesn't exist.`);
       }
 
-      let typeViewExists = await db.knex('layout_views')
-        .where({id: args.typeViewId})
+      let typeViewExists = await t('layout_views')
+        .where({id: input.typeViewId})
         .count('*');
 
       if(!typeViewExists) {
-        throw new GraphQLError(`Type view ${args.typeViewId} doesn't exist.`);
+        throw new GraphQLError(`Type view ${input.typeViewId} doesn't exist.`);
       }
 
       await Util.updateAdministrable({
         id:                     args.id,
         userId:                 context.user_id,
-        parentAdministrableId:  args.parentAdministrableId,
+        parentAdministrableId:  input.parentAdministrableId,
         nameTranslations:       titleTranslations
-      });
+      }, t);
 
-      await db.knex('pages_tags').where({page_id: args.id}).delete();
-      await db.knex('pages_tags').insert(
-        args.tagIds.map(e => ({page_id: args.id, tag_id: e}))
+      await t('pages_tags').where({page_id: args.id}).delete();
+      await t('pages_tags').insert(
+        input.tagIds.map(e => ({page_id: args.id, tag_id: e}))
       );
 
-      if(args.categoryId) {
-        page.category_id = args.categoryId;
+      if(input.categoryId) {
+        page.category_id = input.categoryId;
       }
 
-      if(args.publishDate) {
-        page.publish_date = (new Date(Date.parse(args.publishDate))).toISOString().split('T')[0];
+      if(input.publishDate) {
+        page.publish_date = (new Date(Date.parse(input.publishDate))).toISOString().split('T')[0];
       }
 
       if(args.unpublishDate) {
-        page.unpublish_date = (new Date(Date.parse(args.unpublishDate))).toISOString().split('T')[0];
+        page.unpublish_date = (new Date(Date.parse(input.unpublishDate))).toISOString().split('T')[0];
       }
 
-      if(args.canonicalPageId) {
-        page.canonical_page_id = args.canonicalPageId;
+      if(input.canonicalPageId) {
+        page.canonical_page_id = input.canonicalPageId;
       }
 
-      if(args.comments) {
-        page.comments = args.comments;
+      if(input.comments) {
+        page.comments = input.comments;
       }
 
-      if(args.layoutViewId) {
-        page.layout_view_id = args.layoutViewId;
+      if(input.layoutViewId) {
+        page.layout_view_id = input.layoutViewId;
       }
 
-      if(args.typeViewId) {
-        page.type_view_id = args.typeViewId;
+      if(input.typeViewId) {
+        page.type_view_id = input.typeViewId;
       }
 
-      await db.knex('pages').update(page).where({id: args.id});
+      await t('pages').update(page).where({id: args.id});
 
     });
     return db.knex.raw(`${pagesTable}.id = ?`, [args.id]).toString();

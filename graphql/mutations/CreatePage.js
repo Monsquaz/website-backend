@@ -37,7 +37,7 @@ const CreatePage = {
           layoutViewId:             {type: new GraphQLNonNull(GraphQLInt)},
           typeViewId:               {type: new GraphQLNonNull(GraphQLInt)},
           parentAdministrableId:    {type: new GraphQLNonNull(GraphQLInt)},
-          tagIds:                  {type: new GraphQLList(GraphQLInt)}
+          tagIds:                   {type: new GraphQLList(GraphQLInt)}
         })
       })
     }
@@ -47,22 +47,25 @@ const CreatePage = {
     await db.knex.transaction(async (t) => {
       let input = args.input;
       if(!input) throw new GraphQLError('No input supplied');
-      let titleTranslatableId = await Util.createTranslatable(args.title);
-      if(args.title && !args.slug) {
-        args.slug = args.title.map(e => ({
+
+      // TODO: Check that publishDate has not yet occured
+      let titleTranslatableId = await Util.createTranslatable(input.title || [], t);
+
+      if(input.title && !input.slug) {
+        input.slug = input.title.map(e => ({
           lang: e.lang,
           content: Util.slugify(e.content)
         }));
       }
-      if(args.slug) {
-        for(translation of args.slug) {
+      if(input.slug) {
+        for(translation of input.slug) {
           if(!Util.isValidSlug(translation)) {
             throw new GraphQLError(`'${translation}' is not a valid slug.`);
           }
         }
-        let conflictingSlugTranslations = await db.knex('pages')
+        let conflictingSlugTranslations = await t('pages')
           .innerJoin('translations', 'pages.translatable_id', 'translations.translatable_id')
-          .whereIn('translations.content',  args.slug.map(e => e.content))
+          .whereIn('translations.content',  input.slug.map(e => e.content))
           .select('translation.content');
         if(conflictingSlugTranslations) {
           throw new GraphQLError(
@@ -72,76 +75,77 @@ const CreatePage = {
         }
       }
 
-      let slugTranslatableId      = await Util.createTranslatable(args.slug);
-      let contentTranslatableId   = await Util.createTranslatable(args.content);
+      let slugTranslatableId      = await Util.createTranslatable(input.slug || [], t);
+      let contentTranslatableId   = await Util.createTranslatable(input.content || [], t);
 
-      if(args.canonicalPageId) {
-        let canonicalPage = await db.knex('pages')
-          .where({id: args.canonicalPageId})
+      if(input.canonicalPageId) {
+        let canonicalPage = await t('pages')
+          .where({id: input.canonicalPageId})
           .select('*');
         if(!canonicalPage) {
-          throw new GraphQLError(`Canonical page ${args.canonicalPageId} doesn't exist.`);
+          throw new GraphQLError(`Canonical page ${input.canonicalPageId} doesn't exist.`);
         }
         let canEditCanonicalPage = await Util.hasActionOnAdministrable(
           context.user_id,
           canonicalPage.administrable_id,
-          'edit'
+          'edit',
+          t
         );
         if(!canEditCanonicalPage) {
           throw new GraphQLError(`Not authorized to edit canonical page.`);
         }
       }
 
-      if(args.categoryId) {
-        let categoryExists = await db.knex('categories')
-          .where({id: args.categoryId})
+      if(input.categoryId) {
+        let categoryExists = await t('categories')
+          .where({id: input.categoryId})
           .count('*');
         if(!categoryExists) {
-          throw new GraphQLError(`Category ${args.categoryId} doesn't exist.`);
+          throw new GraphQLError(`Category ${input.categoryId} doesn't exist.`);
         }
       }
 
-      let layoutViewExists = await db.knex('layout_views')
-        .where({id: args.layoutViewId})
+      let layoutViewExists = await t('views')
+        .where({id: input.layoutViewId})
         .count('*');
 
       if(!layoutViewExists) {
-        throw new GraphQLError(`Layout view ${args.layoutViewId} doesn't exist.`);
+        throw new GraphQLError(`Layout view ${input.layoutViewId} doesn't exist.`);
       }
 
-      let typeViewExists = await db.knex('layout_views')
-        .where({id: args.typeViewId})
+      let typeViewExists = await t('views')
+        .where({id: input.typeViewId})
         .count('*');
 
       if(!typeViewExists) {
-        throw new GraphQLError(`Type view ${args.typeViewId} doesn't exist.`);
+        throw new GraphQLError(`Type view ${input.typeViewId} doesn't exist.`);
       }
 
       let administrableId = await Util.createAdministrable({
         userId:                   context.user_id,
-        parentAdministrableId:    args.parentAdministrableId,
-        nameTranslations:         titleTranslations,
+        parentAdministrableId:    input.parentAdministrableId,
+        nameTranslations:         input.title || [],
         requiredActionsOnParent:  ['createPage']
-      });
+      }, t);
 
-      await db.knex('pages').insert({
-        categoryId:               args.categoryId,
+      await t('pages').insert({
+        category_id:              input.categoryId,
         slug_translatable_id:     slugTranslatableId,
         title_translatable_id:    titleTranslatableId,
-        publish_date:             args.publishDate,
-        unpublish_date:           args.unpublishDate,
-        canonical_page_id:        args.canonicalPageId,
+        publish_date:             input.publishDate,
+        unpublish_date:           input.unpublishDate,
+        canonical_page_id:        input.canonicalPageId,
         content_translatable_id:  contentTranslatableId,
-        comments:                 args.comments,
-        layout_view_id:           args.layoutViewId,
-        type_view_id:             args.typeViewId,
+        comments:                 input.comments,
+        layout_view_id:           input.layoutViewId,
+        type_view_id:             input.typeViewId,
         administrable_id:         administrableId
       });
 
-      insertId = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
+      insertId = await Util.getInsertId(t);
 
-      await db.knex('pages_tags').insert(
-        args.tagIds.map(e => ({page_id: insertId, tag_id: e}))
+      await t('pages_tags').insert(
+        input.tagIds.map(e => ({page_id: insertId, tag_id: e}))
       );
 
     });

@@ -1,7 +1,8 @@
 import {
   GraphQLList,
   GraphQLString,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLError
 } from 'graphql';
 
 import Translation from './Translation';
@@ -19,6 +20,16 @@ import {
 import db from '../db';
 
 const Util = {
+
+  getInsertId: async (knex) => {
+    knex = knex || db.knex;
+    let res = await knex.raw('SELECT LAST_INSERT_ID() AS result');
+    return res[0][0].result;
+  },
+
+  inAllLanguages: (content) => {
+    return ['sv', 'en'].map( (lang) => ({lang, content}) );
+  },
 
   isInt: (v) => {
     return typeof v === 'number' && (v % 1) === 0;
@@ -191,56 +202,61 @@ const Util = {
     }
   },
 
-  deleteTranslatable: async (id) => {
-    await db.knex.transaction(async (t) => {
-      await db.knex('translations')
+  deleteTranslatable: async (id, knex) => {
+    knex = knex || db.knex;
+    await knex.transaction(async (t) => {
+      await t('translations')
         .where({translatable_id: id})
         .delete();
-      await db.knex('translatable')
+      await t('translatable')
         .where({id})
         .delete();
     });
   },
 
-  deleteAdministrable: async (params) => {
+  deleteAdministrable: async (params, knex) => {
+    knex = knex || db.knex;
 
-    await db.knex.transaction(async (t) => {
-      let translatableId = await db.knex('administrables')
+    await knex.transaction(async (t) => {
+      let translatableId = await t('administrables')
         .where({id: params.id})
         .select('name_translatable_id');
-      await Util.deleteTranslatable(translatableId);
+      await Util.deleteTranslatable(translatableId, t);
 
-      let canDelete = await Util.hasActionOnAdministrable(params.userId, params.id, 'delete');
+      let canDelete = await Util.hasActionOnAdministrable(params.userId, params.id, 'delete', t);
 
       if(!canDelete) {
         throw new GraphQLError('Missing delete action on administrable.');
       }
 
-      let hasChildren = await db.knex.raw(`
-        SELECT COUNT(*) > 0 FROM administrables_administrables
+      let res = await t.raw(`
+        SELECT COUNT(*) > 0 AS result FROM administrables_administrables
         WHERE ancestor = ? AND descendant != ?
-        `, [params.id, params.id])[0];
+        `, [params.id, params.id]);
+
+      let hasChildren = res[0][0].result;
 
       if(hasChildren) {
         throw new GraphQLError('Administrable has children. Delete them first.');
       }
 
-      await db.knex('administrables_administrables')
+      await t('administrables_administrables')
         .where({descendant: params.id})
         .delete();
 
-      await db.knex('administrables')
+      await t('administrables')
         .where({id: params.id})
         .delete();
 
     });
   },
 
-  updateAdministrable: async (params) => {
-    await db.knex.transaction(async (t) => {
+  updateAdministrable: async (params, knex) => {
+    knex = knex || db.knex;
+    await knex.transaction(async (t) => {
 
       if(params.nameTranslations) {
-        let translatableId = await db.knex('administrable')
+        let translatableId = await t('administrable')
           .where({id: params.id})
           .select('name_translatable_id');
         let translations = [];
@@ -250,19 +266,19 @@ const Util = {
           translation.translatable_id = translatableId;
           translations.push(translation);
         }
-        await db.knex('translations')
+        await t('translations')
           .where({translatable_id: translatableId})
           .andWhere(() => {
             this.whereIn('lang', langs);
           }).delete();
-        await db.knex('translations').insert(translations);
+        await t('translations').insert(translations);
       }
 
       if(params.parentAdministrableId) {
 
         if(params.requiredActionsOnParent) {
           let hasRequiredActionsOnParent = await Util.hasAllActionsOnAdministrable(
-            params.userId, params.parentAdministrableId, params.requiredActionsOnParent
+            params.userId, params.parentAdministrableId, params.requiredActionsOnParent, t
           );
           if(!hasRequiredActionsOnParent) {
             throw new GraphQLError(`Missing one or more actions on parent: ${params.requiredActionsOnParent.join(', ')}`);
@@ -270,24 +286,24 @@ const Util = {
         }
         if(params.requiredActions) {
           let hasActions = await Util.hasAllActionsOnAdministrable(
-            params.userId, params.id, params.requiredActions
+            params.userId, params.id, params.requiredActions, t
           );
           if(!hasActions) {
             throw new GraphQLError(`Missing one or more actions: ${params.requiredActions.join(', ')}`);
           }
         }
 
-        let canMovePage = await Util.hasActionOnAdministrable(params.userId, params.id, 'move');
+        let canMovePage = await Util.hasActionOnAdministrable(params.userId, params.id, 'move', t);
 
         if(!canMovePage) {
          throw new GraphQLError('Not allowed to move administrable.');
         }
 
-        await db.knex.raw(
+        await t.raw(
           `DELETE FROM administrables_administrables WHERE descendant = ?`, [params.id]
         );
 
-        await db.knex.raw(`
+        await t.raw(`
           INSERT INTO administrables_administrables (depth, ancestor, descendant)
             SELECT depth+1, ancestor, ? FROM administrables_administrables
             WHERE descendant = ?
@@ -298,54 +314,56 @@ const Util = {
     });
   },
 
-  createTranslatable: async (translations) => {
+  createTranslatable: async (translations, knex) => {
+    knex = knex || db.knex;
     let result;
-    await db.knex.transaction(async (t) => {
+    await knex.transaction(async (t) => {
       let langs = translations.map(e => e.lang);
       let uniqLangs = uniq(langs);
       if(langs.length != uniqLangs.length) {
         throw new GraphQLError('Multiple translations with the same language.');
       }
-      await db.knex('translatables').insert({});
-      let id = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
-      if(translations) {
-        let translations = [];
-        for(translation of translations) {
-          translation.translatable_id = id;
-          translations.push(translation);
+      await t('translatables').insert({});
+      let translatableId = await Util.getInsertId(t);
+      if(translations.length > 0) {
+        let translationsData = [];
+        for(let translation of translations) {
+          translation.translatable_id = translatableId;
+          translationsData.push(translation);
         }
-        await db.knex('translations').insert(translations);
+        await t('translations').insert(translationsData);
       }
-      result = id;
+      result = translatableId;
     });
     return result;
   },
 
-  updateTranslatable: async (id, translations) => {
+  updateTranslatable: async (id, translations, knex) => {
+    knex = knex || db.knex;
     await db.knex.transaction(async (t) => {
       let langs = translations.map(e => e.lang);
       let uniqLangs = uniq(langs);
       if(langs.length != uniqLangs.length) {
         throw new GraphQLError('Multiple translations with the same language.');
       }
-      await db.knex('translations')
+      await t('translations')
         .where({translatable_id: id})
         .whereIn('lang', uniqLangs)
         .delete();
-      await db.knex('translations')
+      await t('translations')
         .insert(translations.map(e => ({translatable_id: id, ...e})));
     });
   },
 
-  createAdministrable: async (params) => {
+  createAdministrable: async (params, knex) => {
+    knex = knex || db.knex;
 
     let administrableId;
-    await db.knex.transaction(async (t) => {
+    await knex.transaction(async (t) => {
 
       if(params.requiredActionsOnParent) {
-
         let hasRequiredActionsOnParent = await Util.hasAllActionsOnAdministrable(
-          params.userId, params.parentAdministrableId, params.requiredActionsOnParent
+          params.userId, params.parentAdministrableId, params.requiredActionsOnParent, t
         );
 
         if(!hasRequiredActionsOnParent) {
@@ -353,19 +371,19 @@ const Util = {
         }
       }
 
-      let translatableId = Util.createTranslatable(params.nameTranslations);
+      let translatableId = await Util.createTranslatable(params.nameTranslations, t);
 
-      await db.knex('administrables').insert({
+      await t('administrables').insert({
         'name_translatable_id': translatableId,
         'created': db.knex.fn.now(),
-        'updated': db.knex.fn.now(),
+        'changed': db.knex.fn.now(),
         'created_by': params.userId,
         'changed_by': params.userId
       });
 
-      administrableId = await db.knex.raw('SELECT LAST_INSERT_ID()')[0];
+      administrableId = await Util.getInsertId(t);
 
-      await db.knex.raw(`
+      await t.raw(`
         INSERT INTO administrables_administrables (depth, ancestor, descendant)
           SELECT depth+1, ancestor, ? FROM administrables_administrables
           WHERE descendant = ?
@@ -382,31 +400,37 @@ const Util = {
     return administrableId;
   },
 
-  hasActionOnAdministrable: async (userId, administrableId,  action) => {
-    return await db.knex.raw(
-      `SELECT COUNT(*) > 0
+  hasActionOnAdministrable: async (userId, administrableId,  action, knex) => {
+    knex = knex || db.knex;
+    let res = await knex.raw(
+      `SELECT COUNT(*) > 0 AS result
        FROM administrables
        WHERE administrables.id = ? AND ${Util.requireAction (
          userId, 'administrables', 'id', action
-       )}`, administrableId)[0];
+       )}`, administrableId);
+    return res[0][0].result;
   },
 
-  hasAllActionsOnAdministrable: async (userId, administrableId,  actions) => {
-    return await db.knex.raw(
-      `SELECT COUNT(*) > 0
+  hasAllActionsOnAdministrable: async (userId, administrableId, actions, knex) => {
+    knex = knex || db.knex;
+    let res = await knex.raw(
+      `SELECT COUNT(*) > 0 AS result
        FROM administrables
        WHERE administrables.id = ? AND ${Util.requireAllActions (
          userId, 'administrables', 'id', actions
-       )}`, administrableId)[0];
+       )}`, administrableId);
+    return res[0][0].result;
   },
 
-  hasAnyActionsOnAdministrable: async (userId, administrableId,  actions) => {
-    return await db.knex.raw(
-      `SELECT COUNT(*) > 0
+  hasAnyActionsOnAdministrable: async (userId, administrableId, actions, knex) => {
+    knex = knex || db.knex;
+    let res = await knex.raw(
+      `SELECT COUNT(*) > 0 AS result
        FROM administrables
        WHERE administrables.id = ? AND ${Util.requireAnyActions (
          userId, 'administrables', 'id', actions
-       )}`, administrableId)[0];
+       )}`, administrableId);
+    return res[0][0].result;
   }
 
 };

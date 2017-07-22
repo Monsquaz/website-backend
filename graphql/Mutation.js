@@ -19,6 +19,12 @@ import updateUser from './mutations/UpdateUser';
 import verifyUser from './mutations/VerifyUser';
 import deleteUser from './mutations/DeleteUser';
 import deletePage from './mutations/DeletePage';
+import createViewType from './mutations/CreateViewType';
+import updateViewType from './mutations/UpdateViewType';
+import deleteViewType from './mutations/DeleteViewType';
+import createView from './mutations/CreateView';
+import updateView from './mutations/UpdateView';
+import deleteView from './mutations/DeleteView';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -31,7 +37,13 @@ export default new GraphQLObjectType({
     updateUser,
     verifyUser,
     deleteUser,
-    deletePage
+    deletePage,
+    createViewType,
+    updateViewType,
+    deleteViewType,
+    createView,
+    updateView,
+    deleteView
     /*
 
     menuCreate
@@ -44,12 +56,6 @@ export default new GraphQLObjectType({
     categoryUpdate
     categoryDelete
     categorySetParent
-    viewTypeCreate
-    viewTypeUpdate
-    viewTypeDelete
-    viewCreate
-    viewUpdate
-    viewDelete
     forgotPassword
     createUsergroup
     updateUsergroup
