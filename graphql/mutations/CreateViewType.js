@@ -40,14 +40,12 @@ const CreateViewType = {
       if(!input) throw new GraphQLError('No input supplied');
 
       // TODO: Validations?
-      console.warn('BEFORE CREATE ADMINISTRABLE');
       let administrableId = await Util.createAdministrable({
         userId:                   context.user_id,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         Util.inAllLanguages(input.filename),
         requiredActionsOnParent:  ['createViewType']
       }, t);
-      console.warn('BEFORE INSERT VIEW TYPES');
       await t('view_types').insert({
         schema:           input.schema,
         schemaForm:       input.schemaForm,
@@ -56,7 +54,6 @@ const CreateViewType = {
       });
 
       insertId = await Util.getInsertId(t);
-      console.warn('AT END OF TRANSACTION');
     });
     return `${viewTypeTable}.id = ${insertId}`;
   },
