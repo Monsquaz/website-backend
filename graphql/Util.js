@@ -431,6 +431,33 @@ const Util = {
          userId, 'administrables', 'id', actions
        )}`, administrableId);
     return res[0][0].result;
+  },
+
+  existanceAndActionCheck: async (params, knex) => {
+    knex = knex || db.knex;
+    let viewTypes = await knex(params.tableName)
+      .where({id: params.id})
+      .select('administrable_id');
+    if(viewTypes.length == 0) {
+      throw new GraphQLError(`${params.entityName} ${input.viewTypeId} doesn't exist.`);
+    }
+    let viewType = viewTypes[0];
+    let canUseViewType = await Util.hasAllActionsOnAdministrable(
+      context.user_id, viewType.administrable_id, params.actions, t
+    );
+    if(!canUseViewType) {
+      throw new GraphQLError(
+        `Action now allowed for ${entityName}. Requires actions: ${actions.join(', ')}`
+      );
+    }
+  },
+
+  existanceAndActionChecks: async (batch, knex) => {
+    for(let params of batch) {
+      if(params.id) {
+        Util.existanceAndActionCheck(params, knex);
+      }
+    }
   }
 
 };

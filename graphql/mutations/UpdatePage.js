@@ -103,47 +103,36 @@ const UpdatePage = {
       }, t);
 
       if(input.canonicalPageId) {
-        let canonicalPage = await t('pages')
-          .where({id: input.canonicalPageId})
-          .select('*');
-        if(!canonicalPage) {
-          throw new GraphQLError(`Canonical page ${input.canonicalPageId} doesn't exist.`);
-        }
-        let canEditCanonicalPage = await Util.hasActionOnAdministrable(
-          context.user_id,
-          canonicalPage.administrable_id,
-          'edit',
-          t
-        );
-        if(!canEditCanonicalPage) {
-          throw new GraphQLError(`Not authorized to edit canonical page.`);
-        }
+        await Util.existanceAndActionCheck({
+          tableName:  'pages',
+          entityName: 'Canonical page',
+          id:         input.canonicalPageId,
+          actions:    ['edit']
+        }, t);
       }
 
       if(input.categoryId) {
-        let categoryExists = await t('categories')
-          .where({id: input.categoryId})
-          .count('*');
-        if(!categoryExists) {
-          throw new GraphQLError(`Category ${input.categoryId} doesn't exist.`);
-        }
+        await Util.existanceAndActionCheck({
+          tableName:  'categories',
+          entityName: 'Category',
+          id:         input.categoryId,
+          actions:    ['use']
+        }, t);
       }
 
-      let layoutViewExists = await t('layout_views')
-        .where({id: input.layoutViewId})
-        .count('*');
+      await Util.existanceAndActionCheck({
+        tableName:  'view',
+        entityName: 'Layout view',
+        id:         input.layoutViewId,
+        actions:    ['use']
+      }, t);
 
-      if(!layoutViewExists) {
-        throw new GraphQLError(`Layout view ${input.layoutViewId} doesn't exist.`);
-      }
-
-      let typeViewExists = await t('layout_views')
-        .where({id: input.typeViewId})
-        .count('*');
-
-      if(!typeViewExists) {
-        throw new GraphQLError(`Type view ${input.typeViewId} doesn't exist.`);
-      }
+      await Util.existanceAndActionCheck({
+        tableName:  'view',
+        entityName: 'Type view',
+        id:         input.typeViewId,
+        actions:    ['use']
+      }, t);
 
       await Util.updateAdministrable({
         id:                     args.id,

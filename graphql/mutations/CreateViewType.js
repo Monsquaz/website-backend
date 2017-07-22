@@ -46,6 +46,7 @@ const CreateViewType = {
         nameTranslations:         Util.inAllLanguages(input.filename),
         requiredActionsOnParent:  ['createViewType']
       }, t);
+      
       await t('view_types').insert({
         schema:           input.schema,
         schemaForm:       input.schemaForm,

@@ -78,48 +78,32 @@ const CreatePage = {
       let slugTranslatableId      = await Util.createTranslatable(input.slug || [], t);
       let contentTranslatableId   = await Util.createTranslatable(input.content || [], t);
 
-      if(input.canonicalPageId) {
-        let canonicalPage = await t('pages')
-          .where({id: input.canonicalPageId})
-          .select('*');
-        if(!canonicalPage) {
-          throw new GraphQLError(`Canonical page ${input.canonicalPageId} doesn't exist.`);
+      await Util.existanceAndActionChecks([
+        {
+          tableName:  'pages',
+          entityName: 'Canonical page',
+          id:         input.canonicalPageId,
+          actions:    ['edit']
+        },
+        {
+          tableName:  'categories',
+          entityName: 'Category',
+          id:         input.categoryId,
+          actions:    ['use']
+        },
+        {
+          tableName:  'views',
+          entityName: 'Layout view',
+          id:         input.layoutViewId,
+          actions:    ['use']
+        },
+        {
+          tableName:  'views',
+          entityName: 'Type view',
+          id:         input.typeViewId,
+          actions:    ['use']
         }
-        let canEditCanonicalPage = await Util.hasActionOnAdministrable(
-          context.user_id,
-          canonicalPage.administrable_id,
-          'edit',
-          t
-        );
-        if(!canEditCanonicalPage) {
-          throw new GraphQLError(`Not authorized to edit canonical page.`);
-        }
-      }
-
-      if(input.categoryId) {
-        let categoryExists = await t('categories')
-          .where({id: input.categoryId})
-          .count('*');
-        if(!categoryExists) {
-          throw new GraphQLError(`Category ${input.categoryId} doesn't exist.`);
-        }
-      }
-
-      let layoutViewExists = await t('views')
-        .where({id: input.layoutViewId})
-        .count('*');
-
-      if(!layoutViewExists) {
-        throw new GraphQLError(`Layout view ${input.layoutViewId} doesn't exist.`);
-      }
-
-      let typeViewExists = await t('views')
-        .where({id: input.typeViewId})
-        .count('*');
-
-      if(!typeViewExists) {
-        throw new GraphQLError(`Type view ${input.typeViewId} doesn't exist.`);
-      }
+      ], t);
 
       let administrableId = await Util.createAdministrable({
         userId:                   context.user_id,
@@ -144,9 +128,11 @@ const CreatePage = {
 
       insertId = await Util.getInsertId(t);
 
-      await t('pages_tags').insert(
-        input.tagIds.map(e => ({page_id: insertId, tag_id: e}))
-      );
+      if(input.tagIds) {
+        await t('pages_tags').insert(
+          input.tagIds.map(e => ({page_id: insertId, tag_id: e}))
+        );
+      }
 
     });
     return `${pagesTable}.id = ${insertId}`;
