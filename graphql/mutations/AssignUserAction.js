@@ -15,6 +15,8 @@ import TranslationInput from './TranslationInput';
 import AclUser from '../AclUser';
 import joinMonster from 'join-monster';
 import db from '../../db';
+import to from 'await-to-js';
+import { difference } from 'lodash';
 
 const AssignUserAction = {
   type: new GraphQLList(AclUser),
@@ -40,6 +42,14 @@ const AssignUserAction = {
 
     await db.knex.transaction(async (t) => {
 
+      let res = await t('actions').whereIn('name', input.actions).select(['id', 'name']);
+      if(res.length < input.actions.length) {
+        let missing = difference(input.actions, res.map(e => e.name));
+        throw new GraphQLError(`The following actions don't exist: ${missing.join(', ')}`);
+      }
+
+      actionIds = res.map(e => e.id);
+
       await Util.existanceAndActionCheck(
         context.user_id,
         {
@@ -59,9 +69,6 @@ const AssignUserAction = {
           actions:        ['assignAction', ...input.actions]
         })), t);
 
-      let res = await t('actions').whereIn('name', input.actions).select('id');
-      actionIds = res.map(e => e.id);
-
       let inserts = [];
 
       await Promise.all(input.administrableIds.map(
@@ -73,10 +80,13 @@ const AssignUserAction = {
                 action_id: actionId,
                 administrable_id: aId
               };
-              let exists = await Util.exists({
+              let [err, exists] = await to(Util.exists({
                 tableName: 'users_actions_administrables',
                 where: assignment
-              }, t);
+              }, t));
+              if(err) {
+                throw new GraphQLError('Error fetching User ACL data.');
+              }
               if(!exists) {
                 inserts.push(assignment);
               }

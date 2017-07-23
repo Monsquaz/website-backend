@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/Monsquaz/website-backend#readme",
   "dependencies": {
+    "await-to-js": "^1.0.1",
     "babel-cli": "^6.16.0",
     "babel-preset-node6": "^11.0.0",
     "babel-preset-stage-0": "^6.16.0",

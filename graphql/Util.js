@@ -445,7 +445,8 @@ const Util = {
     );
     if(!canUseEntity) {
       throw new GraphQLError(
-        `Action now allowed for ${params.entityName}. Requires actions: ${params.actions.join(', ')}`
+        `Insufficient actions for ${params.entityName} (administrableId: ${entity[foreignKeyName]}).`
+      + ` Requires: ${params.actions.join(', ')}`
       );
     }
   },
@@ -470,15 +471,15 @@ const Util = {
   },
 
   alreadyExistsCheck: async (params, knex) => {
-    if(Util.exists(params, knex)) {
+    if(await Util.exists(params, knex)) {
       throw new GraphQLError(params.errorMessage);
     }
   },
 
   alreadyExistsChecks: async (batch, knex) => {
-    for(let params of batch) {
-      Util.alreadyExistsCheck(params, knex);
-    }
+    await Promise.all(
+      batch.map(async params => await Util.alreadyExistsCheck(params, knex))
+    )
   }
 
 };
