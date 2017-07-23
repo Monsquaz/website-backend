@@ -102,7 +102,7 @@ const UpdatePage = {
         requiredActionsOnParent:  ['createPage']
       }, t);
 
-      await Util.existanceAndActionChecks([
+      await Util.existanceAndActionChecks(context.user_id, [
         {
           tableName:  'pages',
           entityName: 'Canonical page',

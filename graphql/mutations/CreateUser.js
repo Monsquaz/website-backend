@@ -87,21 +87,18 @@ const CreateUser = {
         throw new GraphQLError(`Password is too weak (${passwordStrength} < 2).`);
       }
 
-      let emailCheck = await t('users').where({email: input.email}).count('*');
-      for(let prop in emailCheck[0]) {
-        if(emailCheck[0][prop] > 0) {
-          throw new GraphQLError(`There is already a user registered with that email.`);
-        }
-        break;
-      }
-
-      let nameCheck  = await t('users').where({name: input.name}).count('*');
-      for(let prop in nameCheck[0]) {
-        if(nameCheck[0][prop] > 0) {
-          throw new GraphQLError(`There is already a user registered with that name.`);
-        }
-        break;
-      }
+      await Util.alreadyExistsChecks([
+        {
+          tableName: 'users',
+          where: { email: input.email },
+          errorMessage: 'There is already a user registered with that email.'
+        },
+        {
+          tableName: 'users',
+          where: { email: input.name },
+          errorMessage: 'There is already a user registered with that name..'
+        },
+      ], t);
 
       let administrableId = await Util.createAdministrable({
         userId:                   context.user_id,

@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 
 import Translation from './Translation';
-import Acl from './Acl';
+import AclCombined from './AclCombined';
 import Administrable from './Administrable';
 import {
   uniq
@@ -107,9 +107,9 @@ const Util = {
 
   actionsField: (fieldName) => {
     let result = {
-      type: new GraphQLList(Acl),
-      sqlJoin: (thisTable, aclTable, args, context) => {
-        let joinStr = `${thisTable}.${fieldName} = ${aclTable}.administrable_id AND (${aclTable}.user_id = 1`;
+      type: new GraphQLList(AclCombined),
+      sqlJoin: (thisTable, aclCombinedTable, args, context) => {
+        let joinStr = `${thisTable}.${fieldName} = ${aclCombinedTable}.administrable_id AND (${aclCombinedTable}.user_id = 1`;
         /*
           TODO: Add argument to let us see which actions another user has on the administrable.
           What do we need to be allowed to do this => action "viewActions" on the administrable.
@@ -144,7 +144,7 @@ const Util = {
              FROM acl
              WHERE (${userIdChecks.join(' OR ')})
                AND administrable_id=${tableName}.${fieldName}
-               AND action_name = ANY(SELECT ${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
+               AND action_name IN (${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
              ) = ${actionNames.length}`
   },
 
@@ -158,7 +158,7 @@ const Util = {
              FROM acl
              WHERE (${userIdChecks.join(' OR ')})
                AND administrable_id=${tableName}.${fieldName}
-               AND action_name = ANY(SELECT ${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
+               AND action_name IN (${actionNames.map((e) => db.knex.raw('?', e)).join(',')})
              ) > 0`;
   },
 
@@ -402,61 +402,82 @@ const Util = {
 
   hasActionOnAdministrable: async (userId, administrableId,  action, knex) => {
     knex = knex || db.knex;
-    let res = await knex.raw(
-      `SELECT COUNT(*) > 0 AS result
-       FROM administrables
-       WHERE administrables.id = ? AND ${Util.requireAction (
-         userId, 'administrables', 'id', action
-       )}`, administrableId);
+    let res = await knex.raw(`SELECT COUNT(*) > 0 AS result
+     FROM administrables
+     WHERE administrables.id = ? AND ${Util.requireAction (
+       userId, 'administrables', 'id', action
+     )}`, administrableId);
     return res[0][0].result;
   },
 
   hasAllActionsOnAdministrable: async (userId, administrableId, actions, knex) => {
     knex = knex || db.knex;
-    let res = await knex.raw(
-      `SELECT COUNT(*) > 0 AS result
-       FROM administrables
-       WHERE administrables.id = ? AND ${Util.requireAllActions (
-         userId, 'administrables', 'id', actions
-       )}`, administrableId);
+    let res = await knex.raw(`SELECT COUNT(*) > 0 AS result
+     FROM administrables
+     WHERE administrables.id = ? AND ${Util.requireAllActions (
+       userId, 'administrables', 'id', actions
+     )}`, administrableId);
     return res[0][0].result;
   },
 
   hasAnyActionsOnAdministrable: async (userId, administrableId, actions, knex) => {
     knex = knex || db.knex;
-    let res = await knex.raw(
-      `SELECT COUNT(*) > 0 AS result
-       FROM administrables
-       WHERE administrables.id = ? AND ${Util.requireAnyActions (
-         userId, 'administrables', 'id', actions
-       )}`, administrableId);
+    let res = await knex.raw(`SELECT COUNT(*) > 0 AS result
+     FROM administrables
+     WHERE administrables.id = ? AND ${Util.requireAnyActions (
+       userId, 'administrables', 'id', actions
+     )}`, administrableId);
     return res[0][0].result;
   },
 
-  existanceAndActionCheck: async (params, knex) => {
+  existanceAndActionCheck: async (userId, params, knex) => {
     knex = knex || db.knex;
-    let viewTypes = await knex(params.tableName)
+    let foreignKeyName = params.foreignKeyName || 'administrable_id';
+    let entities = await knex(params.tableName)
       .where({id: params.id})
-      .select('administrable_id');
-    if(viewTypes.length == 0) {
+      .select(foreignKeyName);
+    if(entities.length == 0) {
       throw new GraphQLError(`${params.entityName} ${input.viewTypeId} doesn't exist.`);
     }
-    let viewType = viewTypes[0];
-    let canUseViewType = await Util.hasAllActionsOnAdministrable(
-      context.user_id, viewType.administrable_id, params.actions, t
+    let entity = entities[0];
+    let canUseEntity = await Util.hasAllActionsOnAdministrable(
+      userId, entity[foreignKeyName], params.actions, knex
     );
-    if(!canUseViewType) {
+    if(!canUseEntity) {
       throw new GraphQLError(
-        `Action now allowed for ${entityName}. Requires actions: ${actions.join(', ')}`
+        `Action now allowed for ${params.entityName}. Requires actions: ${params.actions.join(', ')}`
       );
     }
   },
 
-  existanceAndActionChecks: async (batch, knex) => {
-    for(let params of batch) {
-      if(params.id) {
-        Util.existanceAndActionCheck(params, knex);
+  existanceAndActionChecks: async (userId, batch, knex) => {
+    await Promise.all(
+      batch
+        .filter(   params => params.id)
+        .map(async params => await Util.existanceAndActionCheck(userId, params, knex))
+    );
+  },
+
+  exists: async (params, knex) => {
+    let check = await knex(params.tableName).where(params.where).count('*');
+    for(let prop in check[0]) {
+      if(check[0][prop] > 0) {
+        return true;
+      } else {
+        return false;
       }
+    }
+  },
+
+  alreadyExistsCheck: async (params, knex) => {
+    if(Util.exists(params, knex)) {
+      throw new GraphQLError(params.errorMessage);
+    }
+  },
+
+  alreadyExistsChecks: async (batch, knex) => {
+    for(let params of batch) {
+      Util.alreadyExistsCheck(params, knex);
     }
   }
 

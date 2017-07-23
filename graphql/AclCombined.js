@@ -10,21 +10,18 @@ import db from '../db';
 import Translation from './Translation';
 import Util from './Util';
 
-const Acl = new GraphQLObjectType({
-   description: 'An ACL mapping',
-   name: 'Acl',
+const AclCombined = new GraphQLObjectType({
+   description: 'A combined ACL mapping',
+   name: 'AclCombined',
    sqlTable: `acl`,
    uniqueKey: ['action_id','administrable_id','user_id'],
    fields: () => ({
-     id: {
-       type: GraphQLInt,
-       sqlColumn: 'action_id'
-     },
      name: {
        type: GraphQLString,
        sqlColumn: 'action_name'
-     }
+     },
+     administrable: Util.administrableField('administrable_id')
    })
  });
 
-export default Acl;
+export default AclCombined;

@@ -25,6 +25,7 @@ import deleteViewType from './mutations/DeleteViewType';
 import createView from './mutations/CreateView';
 import updateView from './mutations/UpdateView';
 import deleteView from './mutations/DeleteView';
+import assignUserAction from './mutations/AssignUserAction';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -43,8 +44,17 @@ export default new GraphQLObjectType({
     deleteViewType,
     createView,
     updateView,
-    deleteView
+    deleteView,
+    assignUserAction
+
     /*
+
+    ,
+    dissociateUserAction,
+    assignUsergroup
+    usergroupDissociate
+    actionsUsergroupAssign
+    actionsUsergroupDissociate
 
     menuCreate
     menuUpdate
@@ -61,14 +71,10 @@ export default new GraphQLObjectType({
     updateUsergroup
     deleteUsergroup
     oauthLogin
-    updateAdministrable
-    deleteAdministrable
-    assignUserAction
-    dissociateUserAction
-    assignUsergroup
-    usergroupDissociate
-    actionsUsergroupAssign
-    actionsUsergroupDissociate
+
+
+
+
     eventlistenerCreate
     eventlistenerUpdate
     eventlistenerDelete
