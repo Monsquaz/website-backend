@@ -62,7 +62,7 @@ const Util = {
         (thisTable, translatablesTable, args) => `${thisTable}.${fieldName} = ${translatablesTable}.id`,
         (translatablesTable, translationsTable, args) => {
           let joins = [`${translatablesTable}.id = ${translationsTable}.translatable_id`];
-          if(args.lang) joins.push(db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString());
+          if(args.lang) joins.push(db.knex.raw(`${translationsTable}.lang = ?`, args.lang).toString());
           return joins.join(' AND ');
         }
       ]
