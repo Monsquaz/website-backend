@@ -51,7 +51,7 @@ const AssignUserAction = {
       actionIds = res.map(e => e.id);
 
       await Util.existanceAndActionCheck(
-        context.user_id,
+        context.userId,
         {
           tableName:  'users',
           entityName: 'User',
@@ -60,7 +60,7 @@ const AssignUserAction = {
         }, t);
 
       await Util.existanceAndActionChecks(
-        context.user_id,
+        context.userId,
         input.administrableIds.map((aId) => ({
           tableName:      'administrables',
           entityName:     'Administrable',

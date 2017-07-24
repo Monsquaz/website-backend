@@ -41,7 +41,7 @@ const DeletePage = {
 
       await Util.deleteAdministrable({
         id:     administrableId,
-        userId: context.user_id
+        userId: context.userId
       });
 
     });

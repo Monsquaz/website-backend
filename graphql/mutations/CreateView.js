@@ -51,7 +51,7 @@ const CreateView = {
       // TODO: Validate data against view types schema
 
       let administrableId = await Util.createAdministrable({
-        userId:                   context.user_id,
+        userId:                   context.userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         input.name || [],
         requiredActionsOnParent:  ['createView']

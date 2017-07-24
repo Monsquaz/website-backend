@@ -101,7 +101,7 @@ const CreateUser = {
       ], t);
 
       let administrableId = await Util.createAdministrable({
-        userId:                   context.user_id,
+        userId:                   context.userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         Util.inAllLanguages(input.name),
         requiredActionsOnParent:  ['createUser']

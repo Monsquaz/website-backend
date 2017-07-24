@@ -21,6 +21,23 @@ import db from '../db';
 
 const Util = {
 
+  askedFor: (resolveInfo) => {
+    let result = [];
+    (function traverse(selection, parentName){
+      if(parentName) result.push(`${parentName}.${selection.name.value}`);
+      if(selection.selectionSet) {
+        for(let childSelection of selection.selectionSet.selections) {
+          traverse(childSelection, selection.name.value);
+        }
+      }
+    })(resolveInfo.fieldNodes[0])
+    return result;
+  },
+
+  toTree: (selection) => {
+    return _toTree(selection);
+  },
+
   getInsertId: async (knex) => {
     knex = knex || db.knex;
     let res = await knex.raw('SELECT LAST_INSERT_ID() AS result');
@@ -115,7 +132,7 @@ const Util = {
           What do we need to be allowed to do this => action "viewActions" on the administrable.
           It's OK to return empty list of actions if we lack the permission.
         */
-        if(context.user_id) joinStr += ` OR ${derivedTable}.user_id = ${context.user_id}`;
+        if(context.userId) joinStr += ` OR ${derivedTable}.user_id = ${context.userId}`;
         joinStr += ')';
         return joinStr;
       }

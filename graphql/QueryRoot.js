@@ -61,7 +61,7 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.user_id,
+          user_id:    context.userId,
           tableName:  menusTable,
           fieldName: 'administrable_id'
         });
@@ -91,7 +91,7 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.user_id,
+          user_id:    context.userId,
           tableName:  treeTable,
           fieldName: 'ancestor'
         });
@@ -119,7 +119,7 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.user_id,
+          user_id:    context.userId,
           tableName:  administrablesTable,
           fieldName: 'id'
         });
@@ -147,14 +147,15 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.user_id,
+          user_id:    context.userId,
           tableName:  usersTable,
           fieldName: 'administrable_id'
         });
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        let askedFor = Util.askedFor(resolveInfo);
+        return joinMonster(resolveInfo, { ...context, askedFor }, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
@@ -248,7 +249,7 @@ export default new GraphQLObjectType({
         // We can fetch page if it's published or we have "edit" on it.
         wheres.push(db.knex.raw(
           `${pagesTable}.publish_date < ? AND (${pagesTable}.unpublish_date = 0 OR ${pagesTable}.unpublish_date > ?)
-           OR ${Util.requireAction(context.user_id, pagesTable, 'administrable_id', 'edit')}`,
+           OR ${Util.requireAction(context.userId, pagesTable, 'administrable_id', 'edit')}`,
           [db.knex.fn.now(), db.knex.fn.now()]
         ));
 
@@ -256,7 +257,7 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.user_id,
+          user_id:    context.userId,
           tableName:  pagesTable,
           fieldName: 'administrable_id'
         });

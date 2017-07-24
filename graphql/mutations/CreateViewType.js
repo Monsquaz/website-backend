@@ -41,12 +41,12 @@ const CreateViewType = {
 
       // TODO: Validations?
       let administrableId = await Util.createAdministrable({
-        userId:                   context.user_id,
+        userId:                   context.userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         Util.inAllLanguages(input.filename),
         requiredActionsOnParent:  ['createViewType']
       }, t);
-      
+
       await t('view_types').insert({
         schema:           input.schema,
         schemaForm:       input.schemaForm,

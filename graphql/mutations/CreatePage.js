@@ -77,7 +77,7 @@ const CreatePage = {
       let slugTranslatableId      = await Util.createTranslatable(input.slug || [], t);
       let contentTranslatableId   = await Util.createTranslatable(input.content || [], t);
 
-      await Util.existanceAndActionChecks(context.user_id, [
+      await Util.existanceAndActionChecks(context.userId, [
         {
           tableName:  'pages',
           entityName: 'Canonical page',
@@ -105,7 +105,7 @@ const CreatePage = {
       ], t);
 
       let administrableId = await Util.createAdministrable({
-        userId:                   context.user_id,
+        userId:                   context.userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         input.title || [],
         requiredActionsOnParent:  ['createPage']

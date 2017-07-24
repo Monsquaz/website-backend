@@ -95,14 +95,14 @@ const UpdatePage = {
       }
 
       await Util.updateAdministrable({
-        userId:                   context.user_id,
+        userId:                   context.userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         titleTranslations,
         requiredActions:          ['move'],
         requiredActionsOnParent:  ['createPage']
       }, t);
 
-      await Util.existanceAndActionChecks(context.user_id, [
+      await Util.existanceAndActionChecks(context.userId, [
         {
           tableName:  'pages',
           entityName: 'Canonical page',
@@ -131,7 +131,7 @@ const UpdatePage = {
 
       await Util.updateAdministrable({
         id:                     args.id,
-        userId:                 context.user_id,
+        userId:                 context.userId,
         parentAdministrableId:  input.parentAdministrableId,
         nameTranslations:       titleTranslations
       }, t);

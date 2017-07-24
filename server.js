@@ -1,14 +1,16 @@
-import path from 'path'
-import Koa from 'koa'
-import KoaRouter from 'koa-router'
-import graphqlHTTP from 'koa-graphql'
+import path from 'path';
+import Koa from 'koa';
+import KoaRouter from 'koa-router';
+import graphqlHTTP from 'koa-graphql';
 // module we created that lets you serve a custom build of GraphiQL
-import graphiql from 'koa-custom-graphiql'
-import koaStatic from 'koa-static'
-import koaConvert from 'koa-convert'
-import koaCors from 'kcors'
-import db from './db'
-import schema from './graphql/index'
+import graphiql from 'koa-custom-graphiql';
+import koaStatic from 'koa-static';
+import koaConvert from 'koa-convert';
+import koaCors from 'kcors';
+import db from './db';
+import schema from './graphql/index';
+import jwt from 'jsonwebtoken';
+import {jwtSecret} from './config';
 
 const app = new Koa
 const router = new KoaRouter
@@ -27,12 +29,25 @@ router.get('/graphql-relay', graphiql({
 }))
 
 
-router.post('/graphql', koaConvert(graphqlHTTP({
-  schema: schema,
-  formatError: e => {
-    console.error(e)
-    return e
+router.post('/graphql', koaConvert(graphqlHTTP( (request) => {
+  let context = {};
+  if('x-auth-token' in request.header) {
+    let token = request.header['x-auth-token'];
+    try {
+      var decoded = jwt.verify(token, jwtSecret);
+      context.userId = decoded.userId;
+    } catch(err) {
+      console.warn('Invalid token');
+    }
   }
+  return {
+    schema: schema,
+    context,
+    formatError: e => {
+      console.error(e)
+      return e
+    }
+  };
 })))
 /*
 router.post('/graphql-relay', koaConvert(graphqlHTTP({
@@ -53,4 +68,3 @@ app.use(koaStatic(path.join(__dirname, 'node_modules/graphsiql')))
 
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`server listening at http://monsquaz.org:${port}/graphql && http://monsquaz.org:${port}/graphql-relay`))
-
