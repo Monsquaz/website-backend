@@ -88,7 +88,7 @@ export default new GraphQLObjectType({
 
 
 
-    oauthLogin
+
     eventlistenerCreate
     eventlistenerUpdate
     eventlistenerDelete
@@ -99,6 +99,8 @@ export default new GraphQLObjectType({
     messageUpdate
     messageDelete
     updateTag
+
+    oauthLogin
 
     */
   })
