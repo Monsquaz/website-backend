@@ -17,6 +17,7 @@ import Util from './Util';
 import AdministrablesTree from './AdministrablesTree';
 import Action from './Action';
 import Page from './Page';
+import Tag from './Tag';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -193,6 +194,36 @@ export default new GraphQLObjectType({
         return data;
       }
     },
+    tags: {
+      type: new GraphQLList(Tag),
+      args: {
+        id: {
+          description: 'The tag id',
+          type: GraphQLInt
+        },
+        ...Util.actionArguments
+      },
+      where: (tagsTable, args, { userId, askedFor }) => {
+        let wheres = [];
+        if(args.id) wheres.push(db.knex.raw(`${tagsTable}.id = ?`, args.id));
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    userId,
+          tableName:  tagsTable,
+          fieldName: 'administrable_id'
+        });
+        return wheres.join(' AND ');
+      },
+      resolve: async (parent, args, context, resolveInfo) => {
+        let askedFor = Util.askedFor(resolveInfo);
+        let data = await joinMonster(resolveInfo, { ...context, askedFor }, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" });
+        return data;
+      }
+    },
     pages: {
       type: new GraphQLList(Page),
       args: {
@@ -216,6 +247,9 @@ export default new GraphQLObjectType({
           description: 'The url path',
           type: GraphQLString
         },
+        tag: {
+          type: GraphQLInt
+        },
         ...Util.actionArguments
       },
       where: (pagesTable, args, { userId }) => {
@@ -237,6 +271,9 @@ export default new GraphQLObjectType({
               break;
             case 2:
               if(parts[0] == 'tags') {
+                if(args.tag && args.tag != parts[1]) {
+                  throw new GraphQLError(`Can't filter on both tags: ${args.tag} and ${parts[1]}`);
+                }
                 args.tag = parts[1];
               } else {
                 args.categorySlug = parts[0];
