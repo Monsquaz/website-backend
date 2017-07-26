@@ -44,6 +44,9 @@ import createCategory from './mutations/CreateCategory';
 import updateCategory from './mutations/UpdateCategory';
 import deleteCategory from './mutations/DeleteCategory';
 import forgotPassword from './mutations/ForgotPassword';
+import createEventlistener from './mutations/CreateEventlistener';
+import updateEventlistener from './mutations/UpdateEventlistener';
+import deleteEventlistener from './mutations/DeleteEventlistener';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -81,17 +84,13 @@ export default new GraphQLObjectType({
     createCategory,
     updateCategory,
     deleteCategory,
-    forgotPassword
+    forgotPassword,
+    createEventlistener,
+    updateEventlistener,
+    deleteEventlistener
 
     /*
 
-
-
-
-
-    eventlistenerCreate
-    eventlistenerUpdate
-    eventlistenerDelete
     messageTypeCreate
     messageTypeUpdate
     messageTypeDelete
