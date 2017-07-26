@@ -35,7 +35,7 @@ router.post('/graphql', koaConvert(graphqlHTTP( (request) => {
     let token = request.header['x-auth-token'];
     try {
       var decoded = jwt.verify(token, jwtSecret);
-      context.userId = decoded.userId;
+      context = decoded;
     } catch(err) {
       console.warn('Invalid token');
     }

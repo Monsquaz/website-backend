@@ -35,10 +35,17 @@ const UpdateUser = {
       })
     }
   },
-  where: async (pagesTable, args, context) => {
+  where: async (pagesTable, args, { userId, canChangePassword }) => {
     await db.knex.transaction(async (t) => {
       let input = args.input;
       if(!input) throw new GraphQLError('No input supplied');
+
+      if(args.password) {
+        if(!canChangePassword) {
+          throw new GraphQLQuery('Not allowed to change password with current token.');
+        }
+        // TODO: Change password
+      }
       // Kontrollera att vi har "edit"-rättighet på användaren
       // Validera alla fält
       // Kolla så att inte email upptagen.
@@ -47,8 +54,8 @@ const UpdateUser = {
     });
     return `${usersTable}.id = ${args.id}`;
   },
-  resolve: (parent, args, context, resolveInfo) => {
-    return joinMonster(resolveInfo, {}, sql => {
+  resolve: (parent, args, { userId, canChangePassword }, resolveInfo) => {
+    return joinMonster(resolveInfo, { userId, canChangePassword }, sql => {
       return db.call(sql);
     }, { dialect: "mysql", minify: "true" })
   }

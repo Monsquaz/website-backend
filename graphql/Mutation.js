@@ -40,6 +40,10 @@ import deleteMenuItem from './mutations/DeleteMenuItem';
 import createUsergroup from './mutations/CreateUsergroup';
 import updateUsergroup from './mutations/UpdateUsergroup';
 import deleteUsergroup from './mutations/DeleteUsergroup';
+import createCategory from './mutations/CreateCategory';
+import updateCategory from './mutations/UpdateCategory';
+import deleteCategory from './mutations/DeleteCategory';
+import forgotPassword from './mutations/ForgotPassword';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -73,15 +77,17 @@ export default new GraphQLObjectType({
     deleteMenuItem,
     createUsergroup,
     updateUsergroup,
-    deleteUsergroup
+    deleteUsergroup,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    forgotPassword
 
     /*
 
-    categoryCreate
-    categoryUpdate
-    categoryDelete
 
-    forgotPassword
+
+
     oauthLogin
     eventlistenerCreate
     eventlistenerUpdate
