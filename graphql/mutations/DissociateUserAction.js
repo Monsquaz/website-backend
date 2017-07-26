@@ -18,13 +18,20 @@ import db from '../../db';
 import to from 'await-to-js';
 import { difference } from 'lodash';
 
-const AssignUserAction = {
-  type: new GraphQLList(AclUser),
+const DissociateUserAction = {
+  type: new GraphQLObjectType({
+    name: "DissociateUserActionResponse",
+    fields: () => ({
+      affectedRows: {
+        type: new GraphQLNonNull(GraphQLInt)
+      }
+    })
+  }),
   args: {
     input: {
       type: new GraphQLInputObjectType({
         description: '',
-        name: 'AssignUserActionInput',
+        name: 'DissociateUserActionInput',
         fields: () => ({
           userId:            {type: new GraphQLNonNull(GraphQLInt)},
           actions:           {type: new GraphQLList(GraphQLString)},
@@ -33,12 +40,13 @@ const AssignUserAction = {
       })
     }
   },
-  where: async (aclUserTable, args, { userId }) => {
+  resolve: async (parent, args, { userId }, resolveInfo) => {
 
     let input = args.input;
     if(!input) throw new GraphQLError('No input supplied');
 
     let actionIds = [];
+    let affectedRows;
 
     await db.knex.transaction(async (t) => {
 
@@ -69,47 +77,19 @@ const AssignUserAction = {
           actions:        ['assignAction', ...input.actions]
         })), t);
 
-      let inserts = [];
+      await t('users_actions_administrables')
+        .where({user_id: input.userId})
+        .whereIn('action_id', actionIds)
+        .whereIn('administrable_id', input.administrableIds)
+        .delete();
 
-      await Promise.all(input.administrableIds.map(
-        async (aId) => {
-          await Promise.all(actionIds.map(
-            async (actionId) => {
-              let assignment = {
-                user_id: input.userId,
-                action_id: actionId,
-                administrable_id: aId
-              };
-              let [err, exists] = await to(Util.exists({
-                tableName: 'users_actions_administrables',
-                where: assignment
-              }, t));
-              if(err) {
-                throw new GraphQLError('Error fetching User ACL data.');
-              }
-              if(!exists) {
-                inserts.push(assignment);
-              }
-            }
-          ));
-        }
-      ));
-
-      if(inserts.length > 0) {
-        await t('users_actions_administrables').insert(inserts);
-      }
+      affectedRows = await Util.getRowCount(t);
 
     });
-    return `
-      ${aclUserTable}.user_id = ${input.userId}
-        AND ${aclUserTable}.action_id IN (${actionIds.join(',')})
-        AND ${aclUserTable}.administrable_id IN (${input.administrableIds.join(',')})`;
-  },
-  resolve: (parent, args, context, resolveInfo) => {
-    return joinMonster(resolveInfo, {}, sql => {
-      return db.call(sql);
-    }, { dialect: "mysql", minify: "true" })
+
+    return {affectedRows};
+
   }
 }
 
-export default AssignUserAction;
+export default DissociateUserAction;

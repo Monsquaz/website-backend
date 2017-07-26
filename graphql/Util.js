@@ -44,6 +44,12 @@ const Util = {
     return res[0][0].result;
   },
 
+  getRowCount: async (knex) => {
+    knex = knex || db.knex;
+    let res = await knex.raw('SELECT ROW_COUNT() AS result');
+    return res[0][0].result;
+  },
+
   inAllLanguages: (content) => {
     return ['sv', 'en'].map( (lang) => ({lang, content}) );
   },
@@ -125,14 +131,14 @@ const Util = {
   actionsField: (fieldName) => {
     let result = {
       type: new GraphQLList(AclCombined),
-      sqlJoin: (thisTable, aclCombinedTable, args, context) => {
+      sqlJoin: (thisTable, aclCombinedTable, args, { userId }) => {
         let joinStr = `${thisTable}.${fieldName} = ${aclCombinedTable}.administrable_id AND (${aclCombinedTable}.user_id = 1`;
         /*
           TODO: Add argument to let us see which actions another user has on the administrable.
           What do we need to be allowed to do this => action "viewActions" on the administrable.
           It's OK to return empty list of actions if we lack the permission.
         */
-        if(context.userId) joinStr += ` OR ${derivedTable}.user_id = ${context.userId}`;
+        if(userId) joinStr += ` OR ${derivedTable}.user_id = ${userId}`;
         joinStr += ')';
         return joinStr;
       }

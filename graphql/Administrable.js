@@ -21,7 +21,7 @@ const Administrable = new GraphQLObjectType({
       type: GraphQLInt
     },
     name:    Util.translationField('name_translatable_id'),
-    actions: Util.actionsField('id')
+    _actions: Util.actionsField('id')
   })
 });
 

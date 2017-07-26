@@ -48,7 +48,7 @@ const CreateUser = {
       })
     }
   },
-  where: async (usersTable, args, context) => {
+  where: async (usersTable, args, { userId }) => {
     let insertId;
     await db.knex.transaction(async (t) => {
       let input = args.input;
@@ -101,7 +101,7 @@ const CreateUser = {
       ], t);
 
       let administrableId = await Util.createAdministrable({
-        userId:                   context.userId,
+        userId:                   userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         Util.inAllLanguages(input.name),
         requiredActionsOnParent:  ['createUser']

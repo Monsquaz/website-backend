@@ -44,7 +44,7 @@ const UpdatePage = {
       })
     }
   },
-  where: async (pagesTable, args, context) => {
+  where: async (pagesTable, args, { userId }) => {
     await db.knex.transaction(async (t) => {
       let input = args.input;
       if(!input) throw new GraphQLError('No input supplied');
@@ -95,14 +95,14 @@ const UpdatePage = {
       }
 
       await Util.updateAdministrable({
-        userId:                   context.userId,
+        userId:                   userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         titleTranslations,
         requiredActions:          ['move'],
         requiredActionsOnParent:  ['createPage']
       }, t);
 
-      await Util.existanceAndActionChecks(context.userId, [
+      await Util.existanceAndActionChecks(userId, [
         {
           tableName:  'pages',
           entityName: 'Canonical page',
@@ -131,7 +131,7 @@ const UpdatePage = {
 
       await Util.updateAdministrable({
         id:                     args.id,
-        userId:                 context.userId,
+        userId:                 userId,
         parentAdministrableId:  input.parentAdministrableId,
         nameTranslations:       titleTranslations
       }, t);

@@ -29,6 +29,6 @@ export default new GraphQLObjectType({
      },
      administrable: Util.administrableField('administrable_id'),
      itemTree: Util.treeField('menu_items_menu_items', MenuItemsTree, 'menu_id'),
-     actions:  Util.actionsField('administrable_id')
+     _actions:  Util.actionsField('administrable_id')
    })
  });

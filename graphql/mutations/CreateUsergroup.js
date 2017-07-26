@@ -12,51 +12,47 @@ import {
 
 import Util from '../Util';
 import TranslationInput from './TranslationInput';
-import ViewType from '../ViewType';
+import Usergroup from '../Usergroup';
 import joinMonster from 'join-monster';
 import db from '../../db';
 import validator from 'validator';
 
-const CreateViewType = {
-  type: ViewType,
+const CreateView = {
+  type: Usergroup,
   args: {
     input: {
       type: new GraphQLInputObjectType({
         description: '',
-        name: 'CreateViewTypeInput',
+        name: 'CreateUsergroupInput',
         fields: () => ({
-          schema:                 {type: new GraphQLNonNull(GraphQLString)},
-          schemaForm:             {type: new GraphQLNonNull(GraphQLString)},
-          filename:               {type: new GraphQLNonNull(GraphQLString)},
+          name:                   {type: GraphQLString },
           parentAdministrableId:  {type: new GraphQLNonNull(GraphQLInt)}
         })
       })
     }
   },
-  where: async (viewTypeTable, args, { userId }) => {
+  where: async (usergroupsTable, args, { userId }) => {
     let insertId;
     await db.knex.transaction(async (t) => {
       let input = args.input;
       if(!input) throw new GraphQLError('No input supplied');
 
-      // TODO: Validations?
       let administrableId = await Util.createAdministrable({
         userId:                   userId,
         parentAdministrableId:    input.parentAdministrableId,
-        nameTranslations:         Util.inAllLanguages(input.filename),
-        requiredActionsOnParent:  ['createViewType']
+        nameTranslations:         Util.inAllLanguages(input.name),
+        requiredActionsOnParent:  ['createUsergroup']
       }, t);
 
-      await t('view_types').insert({
-        schema:           input.schema,
-        schemaForm:       input.schemaForm,
-        filename:         input.filename,
+      await t('usergroups').insert({
+        name:             input.name,
         administrable_id: administrableId
       });
 
       insertId = await Util.getInsertId(t);
+
     });
-    return `${viewTypeTable}.id = ${insertId}`;
+    return `${usergroupsTable}.id = ${insertId}`;
   },
   resolve: (parent, args, context, resolveInfo) => {
     return joinMonster(resolveInfo, {}, sql => {
@@ -65,4 +61,4 @@ const CreateViewType = {
   }
 }
 
-export default CreateViewType;
+export default CreateView;

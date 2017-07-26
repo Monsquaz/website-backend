@@ -11,6 +11,7 @@ import Translation from './Translation';
 import Util from './Util';
 import AclCombined from './AclCombined';
 import AclUser from './AclUser';
+import Usergroup from './Usergroup';
 
 export default new GraphQLObjectType({
    description: 'A user',
@@ -25,8 +26,8 @@ export default new GraphQLObjectType({
        type: GraphQLString
      },
      administrable: Util.administrableField('administrable_id'),
-     actions: Util.actionsField('administrable_id'),
-     userCombinedActions: {
+     _actions: Util.actionsField('administrable_id'),
+     combinedActions: {
        type: new GraphQLList(AclCombined),
        args: {
          administrableIds: {
@@ -49,7 +50,7 @@ export default new GraphQLObjectType({
        }
 
      },
-     userExplicitActions: {
+     explicitActions: {
        type: new GraphQLList(AclUser),
        args: {
          administrableIds: {
@@ -71,8 +72,7 @@ export default new GraphQLObjectType({
          }
          return joins.join(' AND ');
        }
-     }
-     /*,
+     },
      usergroups: {
        type: new GraphQLList(Usergroup),
        args: {},
@@ -83,6 +83,6 @@ export default new GraphQLObjectType({
            (junctionTable, usergroupsTable, args) => `${junctionTable}.usergroup_id = ${usergroupsTable}.id`
          ]
        }
-     }*/
+     }
    })
  });

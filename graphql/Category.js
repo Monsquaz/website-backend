@@ -22,7 +22,7 @@ const Category = new GraphQLObjectType({
      slug: Util.translationField('slug_translatable_id'),
      title: Util.translationField('title_translatable_id'),
      administrable: Util.administrableField('administrable_id'),
-     actions: Util.actionsField('administrable_id')
+     _actions: Util.actionsField('administrable_id')
    })
  });
 

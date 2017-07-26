@@ -22,7 +22,7 @@ const DeletePage = {
       type: new GraphQLNonNull(GraphQLInt)
     }
   },
-  resolve: async (parent, args, context, resolveInfo) => {
+  resolve: async (parent, args, { userId }, resolveInfo) => {
     let status;
     await db.knex.transaction(async (t) => {
       if(!args.id) throw new GraphQLError('No input supplied');
@@ -41,7 +41,7 @@ const DeletePage = {
 
       await Util.deleteAdministrable({
         id:     administrableId,
-        userId: context.userId
+        userId: userId
       });
 
     });

@@ -41,7 +41,7 @@ const CreatePage = {
       })
     }
   },
-  where: async (pagesTable, args, context) => {
+  where: async (pagesTable, args, { userId }) => {
     let insertId;
     await db.knex.transaction(async (t) => {
       let input = args.input;
@@ -77,7 +77,7 @@ const CreatePage = {
       let slugTranslatableId      = await Util.createTranslatable(input.slug || [], t);
       let contentTranslatableId   = await Util.createTranslatable(input.content || [], t);
 
-      await Util.existanceAndActionChecks(context.userId, [
+      await Util.existanceAndActionChecks(userId, [
         {
           tableName:  'pages',
           entityName: 'Canonical page',
@@ -105,7 +105,7 @@ const CreatePage = {
       ], t);
 
       let administrableId = await Util.createAdministrable({
-        userId:                   context.userId,
+        userId:                   userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         input.title || [],
         requiredActionsOnParent:  ['createPage']

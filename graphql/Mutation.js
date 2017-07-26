@@ -26,6 +26,20 @@ import createView from './mutations/CreateView';
 import updateView from './mutations/UpdateView';
 import deleteView from './mutations/DeleteView';
 import assignUserAction from './mutations/AssignUserAction';
+import dissociateUserAction from './mutations/DissociateUserAction';
+import assignUsergroup from './mutations/AssignUsergroup';
+import dissociateUsergroup from './mutations/DissociateUsergroup';
+import dissociateUsergroupAction from './mutations/DissociateUsergroupAction';
+import assignUsergroupAction from './mutations/AssignUsergroupAction';
+import createMenu from './mutations/CreateMenu';
+import updateMenu from './mutations/UpdateMenu';
+import deleteMenu from './mutations/DeleteMenu';
+import createMenuItem from './mutations/CreateMenuItem';
+import updateMenuItem from './mutations/UpdateMenuItem';
+import deleteMenuItem from './mutations/DeleteMenuItem';
+import createUsergroup from './mutations/CreateUsergroup';
+import updateUsergroup from './mutations/UpdateUsergroup';
+import deleteUsergroup from './mutations/DeleteUsergroup';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -45,36 +59,30 @@ export default new GraphQLObjectType({
     createView,
     updateView,
     deleteView,
-    assignUserAction
+    assignUserAction,
+    dissociateUserAction,
+    assignUsergroup,
+    dissociateUsergroup,
+    dissociateUsergroupAction,
+    assignUsergroupAction,
+    createMenu,
+    updateMenu,
+    deleteMenu,
+    createMenuItem,
+    updateMenuItem,
+    deleteMenuItem,
+    createUsergroup,
+    updateUsergroup,
+    deleteUsergroup
 
     /*
 
-    ,
-    dissociateUserAction,
-    assignUsergroup
-    usergroupDissociate
-    actionsUsergroupAssign
-    actionsUsergroupDissociate
-
-    menuCreate
-    menuUpdate
-    menuDelete
-    menuItemCreate
-    menuItemUpdate
-    menuItemDelete
     categoryCreate
     categoryUpdate
     categoryDelete
-    categorySetParent
+
     forgotPassword
-    createUsergroup
-    updateUsergroup
-    deleteUsergroup
     oauthLogin
-
-
-
-
     eventlistenerCreate
     eventlistenerUpdate
     eventlistenerDelete
@@ -85,9 +93,7 @@ export default new GraphQLObjectType({
     messageUpdate
     messageDelete
     updateTag
-    translationCreate
-    translationUpdate
-    translationDelete
+
     */
   })
 });

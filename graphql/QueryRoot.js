@@ -12,6 +12,7 @@ import db from '../db';
 import Menu from './Menu';
 import Administrable from './Administrable';
 import User from './User';
+import Usergroup from './Usergroup';
 import Util from './Util';
 import AdministrablesTree from './AdministrablesTree';
 import Action from './Action';
@@ -54,14 +55,14 @@ export default new GraphQLObjectType({
         },
         ...Util.actionArguments
       },
-      where: (menusTable, args, context) => {
+      where: (menusTable, args, { userId }) => {
         let wheres = [];
         if(args.id) wheres.push(db.knex.raw(`${menusTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.userId,
+          user_id:    userId,
           tableName:  menusTable,
           fieldName: 'administrable_id'
         });
@@ -82,7 +83,7 @@ export default new GraphQLObjectType({
         },
         ...Util.actionArguments
       },
-      where: (treeTable, args, context) => {
+      where: (treeTable, args, { userId }) => {
         let wheres = [
           'depth = 1'
         ];
@@ -91,7 +92,7 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.userId,
+          user_id:    userId,
           tableName:  treeTable,
           fieldName: 'ancestor'
         });
@@ -112,14 +113,14 @@ export default new GraphQLObjectType({
         },
         ...Util.actionArguments
       },
-      where: (administrablesTable, args, context) => {
+      where: (administrablesTable, args, { userId }) => {
         let wheres = [];
         if(args.id) wheres.push(db.knex.raw(`${administrablesTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.userId,
+          user_id:    userId,
           tableName:  administrablesTable,
           fieldName: 'id'
         });
@@ -140,24 +141,56 @@ export default new GraphQLObjectType({
         },
         ...Util.actionArguments
       },
-      where: (usersTable, args, context) => {
+      where: (usersTable, args, { userId, askedFor }) => {
         let wheres = [];
         if(args.id) wheres.push(db.knex.raw(`${usersTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.userId,
+          user_id:    userId,
           tableName:  usersTable,
           fieldName: 'administrable_id'
         });
         return wheres.join(' AND ');
       },
-      resolve: (parent, args, context, resolveInfo) => {
+      resolve: async (parent, args, context, resolveInfo) => {
         let askedFor = Util.askedFor(resolveInfo);
-        return joinMonster(resolveInfo, { ...context, askedFor }, sql => {
+        let data = await joinMonster(resolveInfo, { ...context, askedFor }, sql => {
           return db.call(sql);
-        }, { dialect: "mysql", minify: "true" })
+        }, { dialect: "mysql", minify: "true" });
+        console.warn('data!', data);
+        return data;
+      }
+    },
+    usergroups: {
+      type: new GraphQLList(Usergroup),
+      args: {
+        id: {
+          description: 'The usergroup id',
+          type: GraphQLInt
+        },
+        ...Util.actionArguments
+      },
+      where: (usergroupsTable, args, { userId, askedFor }) => {
+        let wheres = [];
+        if(args.id) wheres.push(db.knex.raw(`${usergroupsTable}.id = ?`, args.id));
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    userId,
+          tableName:  usergroupsTable,
+          fieldName: 'administrable_id'
+        });
+        return wheres.join(' AND ');
+      },
+      resolve: async (parent, args, context, resolveInfo) => {
+        let askedFor = Util.askedFor(resolveInfo);
+        let data = await joinMonster(resolveInfo, { ...context, askedFor }, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" });
+        return data;
       }
     },
     pages: {
@@ -185,7 +218,7 @@ export default new GraphQLObjectType({
         },
         ...Util.actionArguments
       },
-      where: (pagesTable, args, context) => {
+      where: (pagesTable, args, { userId }) => {
 
         let wheres = [];
 
@@ -249,7 +282,7 @@ export default new GraphQLObjectType({
         // We can fetch page if it's published or we have "edit" on it.
         wheres.push(db.knex.raw(
           `${pagesTable}.publish_date < ? AND (${pagesTable}.unpublish_date = 0 OR ${pagesTable}.unpublish_date > ?)
-           OR ${Util.requireAction(context.userId, pagesTable, 'administrable_id', 'edit')}`,
+           OR ${Util.requireAction(userId, pagesTable, 'administrable_id', 'edit')}`,
           [db.knex.fn.now(), db.knex.fn.now()]
         ));
 
@@ -257,7 +290,7 @@ export default new GraphQLObjectType({
           args,
           required:   ['read'],
           wheres,
-          user_id:    context.userId,
+          user_id:    userId,
           tableName:  pagesTable,
           fieldName: 'administrable_id'
         });

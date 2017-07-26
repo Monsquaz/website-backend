@@ -16,6 +16,12 @@ import Tag from './Tag';
 import PagePath from './PagePath';
 import MenuItem from './MenuItem';
 import View from './View';
+import User from './User';
+
+/*
+  TODO: author should have a type like:
+  {...User, fields: () => ({..._omit(User.fields(), ['userCombinedActions','userExplicitActions'])}) }
+*/
 
 const Page = new GraphQLObjectType({
    description: 'A page',
@@ -97,7 +103,7 @@ const Page = new GraphQLObjectType({
      title: Util.translationField('title_translatable_id'),
      content: Util.translationField('content_translatable_id'),
      administrable: Util.administrableField('administrable_id'),
-     actions: Util.actionsField('administrable_id')
+     _actions: Util.actionsField('administrable_id')
    })
  });
 

@@ -12,21 +12,21 @@ import {
 
 import Util from '../Util';
 import TranslationInput from './TranslationInput';
-import AclUser from '../AclUser';
+import AclUsergroup from '../AclUsergroup';
 import joinMonster from 'join-monster';
 import db from '../../db';
 import to from 'await-to-js';
 import { difference } from 'lodash';
 
-const AssignUserAction = {
-  type: new GraphQLList(AclUser),
+const AssignUsergroupAction = {
+  type: new GraphQLList(AclUsergroup),
   args: {
     input: {
       type: new GraphQLInputObjectType({
         description: '',
-        name: 'AssignUserActionInput',
+        name: 'AssignUsergroupActionInput',
         fields: () => ({
-          userId:            {type: new GraphQLNonNull(GraphQLInt)},
+          usergroupId:            {type: new GraphQLNonNull(GraphQLInt)},
           actions:           {type: new GraphQLList(GraphQLString)},
           administrableIds:  {type: new GraphQLList(GraphQLInt)}
         })
@@ -53,9 +53,9 @@ const AssignUserAction = {
       await Util.existanceAndActionCheck(
         userId,
         {
-          tableName:  'users',
-          entityName: 'User',
-          id:         input.userId,
+          tableName:  'usergroups',
+          entityName: 'Usergroup',
+          id:         input.usergroupId,
           actions:    ['edit']
         }, t);
 
@@ -76,12 +76,12 @@ const AssignUserAction = {
           await Promise.all(actionIds.map(
             async (actionId) => {
               let assignment = {
-                user_id: input.userId,
+                usergroup_id: input.usergroupId,
                 action_id: actionId,
                 administrable_id: aId
               };
               let [err, exists] = await to(Util.exists({
-                tableName: 'users_actions_administrables',
+                tableName: 'usergroups_actions_administrables',
                 where: assignment
               }, t));
               if(err) {
@@ -96,14 +96,14 @@ const AssignUserAction = {
       ));
 
       if(inserts.length > 0) {
-        await t('users_actions_administrables').insert(inserts);
+        await t('usergroups_actions_administrables').insert(inserts);
       }
 
     });
     return `
-      ${aclUserTable}.user_id = ${input.userId}
-        AND ${aclUserTable}.action_id IN (${actionIds.join(',')})
-        AND ${aclUserTable}.administrable_id IN (${input.administrableIds.join(',')})`;
+      ${aclUsergroupTable}.user_id = ${input.userId}
+        AND ${aclUsergroupTable}.action_id IN (${actionIds.join(',')})
+        AND ${aclUsergroupTable}.administrable_id IN (${input.administrableIds.join(',')})`;
   },
   resolve: (parent, args, context, resolveInfo) => {
     return joinMonster(resolveInfo, {}, sql => {
@@ -112,4 +112,4 @@ const AssignUserAction = {
   }
 }
 
-export default AssignUserAction;
+export default AssignUsergroupAction;

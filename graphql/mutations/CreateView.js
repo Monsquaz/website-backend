@@ -33,7 +33,7 @@ const CreateView = {
       })
     }
   },
-  where: async (viewTable, args, context) => {
+  where: async (viewTable, args, { userId }) => {
     let insertId;
     await db.knex.transaction(async (t) => {
       let input = args.input;
@@ -51,7 +51,7 @@ const CreateView = {
       // TODO: Validate data against view types schema
 
       let administrableId = await Util.createAdministrable({
-        userId:                   context.userId,
+        userId:                   userId,
         parentAdministrableId:    input.parentAdministrableId,
         nameTranslations:         input.name || [],
         requiredActionsOnParent:  ['createView']
