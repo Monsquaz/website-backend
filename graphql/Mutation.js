@@ -50,6 +50,9 @@ import deleteEventlistener from './mutations/DeleteEventlistener';
 import createMessageType from './mutations/CreateMessageType';
 import updateMessageType from './mutations/UpdateMessageType';
 import deleteMessageType from './mutations/DeleteMessageType';
+import createMessage from './mutations/CreateMessage';
+import updateMessage from './mutations/UpdateMessage';
+import deleteMessage from './mutations/DeleteMessage';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -91,17 +94,17 @@ export default new GraphQLObjectType({
     createEventlistener,
     updateEventlistener,
     deleteEventlistener,
-
     createMessageType,
     updateMessageType,
-    deleteMessageType
+    deleteMessageType,
+    createMessage,
+    updateMessage,
+    deleteMessage
 
     /*
 
 
-    messageCreate
-    messageUpdate
-    messageDelete
+
     updateTag
 
     oauthLogin

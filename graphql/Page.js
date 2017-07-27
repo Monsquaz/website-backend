@@ -50,7 +50,7 @@ const Page = new GraphQLObjectType({
      },
      canonical: {
        type: Page,
-       sqlTable: 'page',
+       sqlTable: 'pages',
        sqlJoin: (thisTable, otherTable, args) =>
          `${thisTable}.canonical_page_id = ${otherTable}.id`
      },

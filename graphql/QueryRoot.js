@@ -21,6 +21,7 @@ import Tag from './Tag';
 import Category from './Category';
 import Eventlistener from './Eventlistener';
 import MessageType from './MessageType';
+import Message from './Message';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -275,6 +276,44 @@ export default new GraphQLObjectType({
           wheres,
           user_id:    userId,
           tableName:  messageTypesTable,
+          fieldName: 'administrable_id'
+        });
+        return wheres.join(' AND ');
+      },
+      resolve: async (parent, args, context, resolveInfo) => {
+        let askedFor = Util.askedFor(resolveInfo);
+        let data = await joinMonster(resolveInfo, { ...context, askedFor }, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" });
+        return data;
+      }
+    },
+    messages: {
+      type: new GraphQLList(Message),
+      args: {
+        id: {
+          description: 'The message id',
+          type: GraphQLInt
+        },
+        senderId: {
+          description: 'User id of the sender',
+          type: GraphQLInt
+        },
+        recipientId: {
+          description: 'User id of the recipient',
+          type: GraphQLInt
+        },
+        ...Util.actionArguments
+      },
+      where: (messagesTable, args, { userId, askedFor }) => {
+        let wheres = [];
+        if(args.id) wheres.push(db.knex.raw(`${messagesTable}.id = ?`, args.id));
+        Util.handleActionArguments({
+          args,
+          required:   ['read'],
+          wheres,
+          user_id:    userId,
+          tableName:  messagesTable,
           fieldName: 'administrable_id'
         });
         return wheres.join(' AND ');
