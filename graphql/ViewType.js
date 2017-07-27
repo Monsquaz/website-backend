@@ -25,7 +25,7 @@ const ViewType = new GraphQLObjectType({
      schemaForm: {
        type: GraphQLString
      },
-     filename: {
+     component: {
        type: GraphQLString
      }
    })

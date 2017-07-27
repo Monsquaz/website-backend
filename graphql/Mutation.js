@@ -102,13 +102,8 @@ export default new GraphQLObjectType({
     deleteMessage
 
     /*
-
-
-
     updateTag
-
     oauthLogin
-
     */
   })
 });
