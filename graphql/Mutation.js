@@ -47,6 +47,9 @@ import forgotPassword from './mutations/ForgotPassword';
 import createEventlistener from './mutations/CreateEventlistener';
 import updateEventlistener from './mutations/UpdateEventlistener';
 import deleteEventlistener from './mutations/DeleteEventlistener';
+import createMessageType from './mutations/CreateMessageType';
+import updateMessageType from './mutations/UpdateMessageType';
+import deleteMessageType from './mutations/DeleteMessageType';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -87,13 +90,15 @@ export default new GraphQLObjectType({
     forgotPassword,
     createEventlistener,
     updateEventlistener,
-    deleteEventlistener
+    deleteEventlistener,
+
+    createMessageType,
+    updateMessageType,
+    deleteMessageType
 
     /*
 
-    messageTypeCreate
-    messageTypeUpdate
-    messageTypeDelete
+
     messageCreate
     messageUpdate
     messageDelete

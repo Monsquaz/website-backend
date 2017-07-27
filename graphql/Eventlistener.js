@@ -10,9 +10,6 @@ import {
 import db from '../db';
 import Translation from './Translation';
 import Util from './Util';
-import AclCombined from './AclCombined';
-import AclUser from './AclUser';
-import Usergroup from './Usergroup';
 
 export default new GraphQLObjectType({
    description: 'An eventlistener',
