@@ -7,6 +7,7 @@ import {
 } from 'graphql';
 
 import db from '../db';
+import MenuItem from './MenuItem';
 
 const MenuItemsTree = new GraphQLObjectType({
    description: 'A menu item',
@@ -21,10 +22,16 @@ const MenuItemsTree = new GraphQLObjectType({
        type: GraphQLInt
      },
      ancestor: {
-       type: GraphQLInt
+       type: MenuItem,
+       sqlTable: 'menu_items',
+       sqlJoin: (thisTable, menuItemsTable, args) =>
+         `${thisTable}.ancestor = ${menuItemsTable}.id`
      },
      descendant: {
-       type: GraphQLInt
+       type: MenuItem,
+       sqlTable: 'menu_items',
+       sqlJoin: (thisTable, menuItemsTable, args) =>
+         `${thisTable}.descendant = ${menuItemsTable}.id`
      }
    })
  });

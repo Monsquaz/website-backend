@@ -22,6 +22,7 @@ import Category from './Category';
 import Eventlistener from './Eventlistener';
 import MessageType from './MessageType';
 import Message from './Message';
+import MenuItemsTree from './MenuItemsTree';
 
 export default new GraphQLObjectType({
   description: 'Global query object',
@@ -79,6 +80,61 @@ export default new GraphQLObjectType({
         }, { dialect: "mysql", minify: "true" })
       }
     },
+    menuItemsTree: {
+      type: new GraphQLList(MenuItemsTree),
+      args: {
+        menuId: {
+          description: 'The menu id',
+          type: new GraphQLNonNull(GraphQLInt)
+        },
+        rootId: {
+          type: GraphQLInt
+        },
+        maxDepth: {
+          type: GraphQLInt
+        }
+      },
+      where: async (treeTable, args, { userId }) => {
+        let wheres = [
+          'depth = 1'
+        ];
+        if(args.id) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.menuId));
+
+        let userIdChecks = ['acl.user_id = 1']; // Guest
+        if(userId) userIdChecks.push(db.knex.raw(`acl.user_id = ?`, userId).toString());
+
+        let res = await db.knex.raw(
+          `SELECT COUNT(*) AS result
+           FROM acl
+           JOIN menus ON menus.administrable_id = acl.administrable_id
+           WHERE acl.action_name='read' AND (${userIdChecks.join(' OR ')}) AND menus.id=?`, [args.menuId]);
+
+        let canReadMenu = res[0][0].result;
+        if(!canReadMenu) {
+          throw new GraphQLError(`Not allowed to read menu with id ${args.menuId}`);
+        }
+
+        if(args.depth && !args.rootId) {
+          throw new GraphQLError('depth argument requires rootId argument');
+        }
+
+        if(args.rootId) {
+          wheres.push(db.knex.raw(
+            `${treeTable}.ancestor IN (SELECT descendant FROM administrables_administrables WHERE ancestor = ?)`, [args.rootId]).toString());
+          if(args.maxDepth) {
+            wheres.push(db.knex.raw(
+              `${treeTable}.descendant NOT IN (SELECT descendant FROM administrables_administrables WHERE depth > ?)`, [args.maxDepth]).toString());
+          }
+        }
+
+        return wheres.join(' AND ');
+      },
+      resolve: (parent, args, context, resolveInfo) => {
+        return joinMonster(resolveInfo, {}, sql => {
+          return db.call(sql);
+        }, { dialect: "mysql", minify: "true" })
+      }
+    },
     administrablesTree: {
       type: new GraphQLList(AdministrablesTree),
       args: {
@@ -86,13 +142,34 @@ export default new GraphQLObjectType({
           description: 'The administrable tree id',
           type: GraphQLInt
         },
+        rootId: {
+          type: GraphQLInt
+        },
+        maxDepth: {
+          type: GraphQLInt
+        },
         ...Util.actionArguments
       },
       where: (treeTable, args, { userId }) => {
         let wheres = [
-          'depth = 1'
+          `${treeTable}.depth = 1`
         ];
+
         if(args.id) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.id));
+
+        if(args.depth && !args.rootId) {
+          throw new GraphQLError('depth argument requires rootId argument');
+        }
+
+        if(args.rootId) {
+          wheres.push(db.knex.raw(
+            `${treeTable}.ancestor IN (SELECT descendant FROM administrables_administrables WHERE ancestor = ?)`, [args.rootId]).toString());
+          if(args.maxDepth) {
+            wheres.push(db.knex.raw(
+              `${treeTable}.descendant NOT IN (SELECT descendant FROM administrables_administrables WHERE depth > ?)`, [args.maxDepth]).toString());
+          }
+        }
+
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -101,6 +178,7 @@ export default new GraphQLObjectType({
           tableName:  treeTable,
           fieldName: 'ancestor'
         });
+
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
@@ -388,11 +466,12 @@ export default new GraphQLObjectType({
 
         let wheres = [];
 
-        if(args.path) {
+        if('path' in args) {
           if(Object.keys(args).length > 1) {
             throw new GraphQLError(`Filter on path can't be combined with other filters.`);
           }
           let parts = args.path.split('/').slice(1);
+
           switch(parts.length) {
             case 1:
               if(Util.isInt(parts[0])) {
@@ -417,43 +496,43 @@ export default new GraphQLObjectType({
           }
         }
 
-        if(args.id) {
-          wheres.push(db.knex.raw(`${pagesTable}.id = ?`, args.id));
+        if('id' in args) {
+          wheres.push(db.knex.raw(`${pagesTable}.id = ?`, args.id).toString());
         }
 
-        if(args.categoryId) {
-          wheres.push(db.knex.raw(`${pagesTable}.category_id = ?`, args.categoryId));
+        if('categoryId' in args) {
+          wheres.push(db.knex.raw(`${pagesTable}.category_id = ?`, args.categoryId).toString());
         }
 
-        if(args.slug) {
+        if('slug' in args) {
           wheres.push(db.knex.raw(`
             ? IN (SELECT content
             FROM translations
             WHERE translatable_id = ${pagesTable}.slug_translatable_id)`,
-            args.slug));
+            args.slug).toString());
         }
 
-        if(args.categorySlug) {
+        if('categorySlug' in args) {
           wheres.push(db.knex.raw(`
             ${pagesTable}.category_id IN (SELECT c.id FROM categories AS c
               JOIN translations AS t ON t.translatable_id = c.translatable_id
-              WHERE t.content = ?)`, args.categorySlug));
+              WHERE t.content = ?)`, args.categorySlug).toString());
         }
 
-        if(args.tag) {
+        if('tag' in args) {
           wheres.push(db.knex.raw(`
             ${pagesTable}.id IN (SELECT page_id FROM pages_tags AS pt
               JOIN translations AS t ON t.translatable_id = pt.translatable_id
               WHERE t.content = ?)`,
-            args.tag));
+            args.tag).toString());
         }
 
         // We can fetch page if it's published or we have "edit" on it.
         wheres.push(db.knex.raw(
-          `${pagesTable}.publish_date < ? AND (${pagesTable}.unpublish_date = 0 OR ${pagesTable}.unpublish_date > ?)
-           OR ${Util.requireAction(userId, pagesTable, 'administrable_id', 'edit')}`,
+          `(${pagesTable}.publish_date < ? AND (${pagesTable}.unpublish_date = 0 OR ${pagesTable}.unpublish_date > ?)
+           OR ${Util.requireAction(userId, pagesTable, 'administrable_id', 'edit')})`,
           [db.knex.fn.now(), db.knex.fn.now()]
-        ));
+        ).toString());
 
         Util.handleActionArguments({
           args,

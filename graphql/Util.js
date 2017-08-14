@@ -79,6 +79,17 @@ const Util = {
         type: GraphQLString
       }
     },
+    sqlTable: 'translations',
+    sqlJoin: (thisTable, translationsTable, args) => {
+      let joins = [
+        `${thisTable}.${fieldName} = ${translationsTable}.translatable_id`
+      ]
+      if(args.lang) {
+        joins.push(knex.raw(`${translationsTable}.lang = ?`, args.lang).toString())
+      }
+      return joins.join(' AND ');
+    }    
+    /*
     junction: {
       sqlTable: 'translatables',
       sqlJoins: [
@@ -90,6 +101,7 @@ const Util = {
         }
       ]
     }
+    */
   }),
 
   administrableField: (fieldName) => ({

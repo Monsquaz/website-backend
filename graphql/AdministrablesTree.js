@@ -7,6 +7,7 @@ import {
 } from 'graphql';
 
 import db from '../db';
+import Util from './Util';
 
 const AdministrablesTree = new GraphQLObjectType({
    description: 'An administrable mapping',
@@ -17,12 +18,8 @@ const AdministrablesTree = new GraphQLObjectType({
      id: {
        type: GraphQLInt
      },
-     ancestor: {
-       type: GraphQLInt
-     },
-     descendant: {
-       type: GraphQLInt
-     }
+     ancestor: Util.administrableField('ancestor'),
+     descendant: Util.administrableField('descendant')
    })
  });
 
