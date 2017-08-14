@@ -5,10 +5,10 @@ exports.seed = async function(knex, Promise) {
   await knex('actions').delete();
   await knex('categories_categories').delete();
   await knex('categories').delete();
-  await knex('views').delete();
-  await knex('view_types').delete();
   await knex('pages_tags').delete();
   await knex('pages').delete();
+  await knex('views').delete();
+  await knex('view_types').delete();
   await knex('administrables').delete();
   await knex('administrables_administrables').delete();
   await knex('administrables_meta_datas').delete();

@@ -23,22 +23,21 @@ let insertView = async (knex, data) => {
 
     let administrable_id = await Util.createAdministrable({
       parentAdministrableId,
-      nameTranslations: data.title
+      nameTranslations: data.name
     }, t);
 
     let view_types = await t('view_types')
-      .innerJoin('translations', 'view_types.name_translatable_id', 'translations.translatable_id')
+      .innerJoin('administrables', 'view_types.administrable_id', 'administrables.id')
+      .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
       .where({
-        'content': data.viewType,
+        'translations.content': data.viewType,
         'translations.lang': 'en'
       })
       .select('view_types.id');
     if(view_types.length == 0) {
       throw new Error(`Could not find view type ${data.viewType}`);
     }
-    view_type_id = view_types[0].id;
-
-    console.warn('data.name', data.name);
+    let view_type_id = view_types[0].id;
 
     let insertData = {
       data: JSON.stringify(data.data),
@@ -65,6 +64,11 @@ exports.seed = async function(knex, Promise) {
   return await insertViews([
     {
       name: [{lang: 'en', content: 'Start'}],
+      data: {},
+      viewType: 'Overview',
+    },
+    {
+      name: [{lang: 'en', content: 'Page'}],
       data: {},
       viewType: 'Overview',
     },

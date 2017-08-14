@@ -72,6 +72,12 @@ let insertPage = async (knex, data) => {
       nameTranslations: data.title
     }, t);
 
+    if(!('slug' in data)) {
+      data.slug = data.title.map((e) => {
+        return {...e, content: Util.slugify(e.content)};
+      });
+    }
+
     let insertData = {
       category_id,
       slug_translatable_id:  await Util.createTranslatable(data.slug, t),
@@ -79,7 +85,7 @@ let insertPage = async (knex, data) => {
       comments: !!data.comments,
       layout_view_id,
       type_view_id,
-      content_translatable: await Util.createTranslatable(data.content, t),
+      content_translatable_id: await Util.createTranslatable(data.content, t),
       administrable_id
     };
 
@@ -102,7 +108,6 @@ exports.seed = async function(knex, Promise) {
     // START PAGE
     {
       category: 'Main',
-      slug: '',
       title: [
         {
           lang: 'en',
@@ -110,7 +115,7 @@ exports.seed = async function(knex, Promise) {
         }
       ],
       comments: false,
-      layout: 'Overview',
+      layout: 'Start',
       type: 'Page',
       content: [
         {
