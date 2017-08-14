@@ -1,13 +1,10 @@
 import Util from '../graphql/Util';
 
-let insertAdministrables = async (datas, knex, ) => {
-  return await knex.transaction(async (t) => {
-    await Promise.all(datas.map(e => Util.createAdministrable(e, t)));
-  });
+let insertAdministrables = async (datas, knex) => {
+  return await Promise.all(datas.map(e => Util.createAdministrable(e, knex)));
 }
 
 exports.seed = async function(knex, Promise) {
-  return await knex.transaction(async (t) => {
     await insertAdministrables([
       {parentAdministrableId: null, nameTranslations: [{lang: 'en', content: 'Pages'}]},
       {parentAdministrableId: null, nameTranslations: [{lang: 'en', content: 'Categories'}]},
@@ -20,7 +17,5 @@ exports.seed = async function(knex, Promise) {
       {parentAdministrableId: null, nameTranslations: [{lang: 'en', content: 'Message types'}]},
       {parentAdministrableId: null, nameTranslations: [{lang: 'en', content: 'Messages'}]},
       {parentAdministrableId: null, nameTranslations: [{lang: 'en', content: 'Tags'}]},
-    ], t);
-  });
-
+    ], knex);
 };

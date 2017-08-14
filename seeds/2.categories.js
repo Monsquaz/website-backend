@@ -51,32 +51,28 @@ let insertCategory = async (knex, data) => {
 }
 
 let insertCategories = async (datas, knex) => {
-  return await knex.transaction(async (t) => {
-    await Promise.all(datas.map(e => insertCategory(t, e)));
-  });
+  return await Promise.all(datas.map(e => insertCategory(knex, e)));
 }
 
 exports.seed = async function(knex, Promise) {
-  return await knex.transaction(async (t) => {
-    return await insertCategories([
-      // Main
-      {
-        title: [
-          {lang: 'en', content: 'Main'}
-        ],
-        slug: [
-          {lang: 'en', content: 'main'}
-        ],
-      },
-      // Admin
-      {
-        title: [
-          {lang: 'en', content: 'Administration'}
-        ],
-        slug: [
-          {lang: 'en', content: 'admin'}
-        ],
-      }
-    ], t);
-  });
+  return await insertCategories([
+    // Main
+    {
+      title: [
+        {lang: 'en', content: 'Main'}
+      ],
+      slug: [
+        {lang: 'en', content: 'main'}
+      ],
+    },
+    // Admin
+    {
+      title: [
+        {lang: 'en', content: 'Administration'}
+      ],
+      slug: [
+        {lang: 'en', content: 'admin'}
+      ],
+    }
+  ], knex);
 };

@@ -5,59 +5,53 @@ let insertView = async (knex, data) => {
 
   let ret = null;
 
-  await knex.transaction(async (t) => {
+  let administrables = await knex('administrables')
+    .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
+    .where({
+      'content': 'Views',
+      'translations.lang': 'en'
+    })
+    .select('administrables.id');
 
-    let administrables = await t('administrables')
-      .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
-      .where({
-        'content': 'Views',
-        'translations.lang': 'en'
-      })
-      .select('administrables.id');
+  if(administrables.length == 0) {
+    throw new Error(`Could not find Views administrable!`);
+  }
 
-    if(administrables.length == 0) {
-      throw new Error(`Could not find Views administrable!`);
-    }
+  let parentAdministrableId = administrables[0].id;
 
-    let parentAdministrableId = administrables[0].id;
+  let administrable_id = await Util.createAdministrable({
+    parentAdministrableId,
+    nameTranslations: data.name
+  }, knex);
 
-    let administrable_id = await Util.createAdministrable({
-      parentAdministrableId,
-      nameTranslations: data.name
-    }, t);
+  let view_types = await knex('view_types')
+    .innerJoin('administrables', 'view_types.administrable_id', 'administrables.id')
+    .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
+    .where({
+      'translations.content': data.viewType,
+      'translations.lang': 'en'
+    })
+    .select('view_types.id');
+  if(view_types.length == 0) {
+    throw new Error(`Could not find view type ${data.viewType}`);
+  }
+  let view_type_id = view_types[0].id;
 
-    let view_types = await t('view_types')
-      .innerJoin('administrables', 'view_types.administrable_id', 'administrables.id')
-      .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
-      .where({
-        'translations.content': data.viewType,
-        'translations.lang': 'en'
-      })
-      .select('view_types.id');
-    if(view_types.length == 0) {
-      throw new Error(`Could not find view type ${data.viewType}`);
-    }
-    let view_type_id = view_types[0].id;
+  let insertData = {
+    data: JSON.stringify(data.data),
+    name_translatable_id: await Util.createTranslatable(data.name, knex),
+    view_type_id,
+    administrable_id
+  };
 
-    let insertData = {
-      data: JSON.stringify(data.data),
-      name_translatable_id: await Util.createTranslatable(data.name, t),
-      view_type_id,
-      administrable_id
-    };
-
-    ret = await t('views').insert(insertData);
-
-  });
+  ret = await knex('views').insert(insertData);
 
   return ret;
 
 }
 
 let insertViews = async (datas, knex) => {
-  return await knex.transaction(async (t) => {
-    await Promise.all(datas.map(e => insertView(t, e)));
-  });
+  return await Promise.all(datas.map(e => insertView(knex, e)));
 }
 
 exports.seed = async function(knex, Promise) {
