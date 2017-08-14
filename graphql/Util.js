@@ -88,7 +88,7 @@ const Util = {
         joins.push(knex.raw(`${translationsTable}.lang = ?`, args.lang).toString())
       }
       return joins.join(' AND ');
-    }    
+    }
     /*
     junction: {
       sqlTable: 'translatables',
@@ -396,7 +396,7 @@ const Util = {
     let administrableId;
     await knex.transaction(async (t) => {
 
-      if(params.requiredActionsOnParent) {
+      if('requiredActionsOnParent' in params) {
         let hasRequiredActionsOnParent = await Util.hasAllActionsOnAdministrable(
           params.userId, params.parentAdministrableId, params.requiredActionsOnParent, t
         );
