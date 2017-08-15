@@ -44,20 +44,27 @@ let insertViews = async (datas, knex) => {
 
 exports.seed = async function(knex, Promise) {
   return await insertViews([
+    /* Layouts */
     {
       name: [{lang: 'en', content: 'Start'}],
       data: {},
       viewType: 'Overview',
     },
     {
-      name: [{lang: 'en', content: 'Page'}],
+      name: [{lang: 'en', content: 'Main'}],
       data: {},
       viewType: 'Overview',
     },
     {
-      name: [{lang: 'en', content: 'AdminStart'}],
+      name: [{lang: 'en', content: 'AdminMain'}],
       data: {},
       viewType: 'Admin',
-    }
+    },
+    /* Types*/
+    {
+      name: [{lang: 'en', content: 'ArticleMain'}],
+      data: {},
+      viewType: 'Article',
+    },
   ], knex);
 };

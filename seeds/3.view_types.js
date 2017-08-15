@@ -113,5 +113,11 @@ exports.seed = async function(knex, Promise) {
       schemaForm: [],
       component: 'User',
     },
+    {
+      name: [{lang: 'en', content: 'Editor'}],
+      schema: {},
+      schemaForm: [],
+      component: 'Editor',
+    }
   ], knex);
 };

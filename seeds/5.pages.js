@@ -90,10 +90,44 @@ exports.seed = async function(knex, Promise) {
     {
       category: 'Main',
       title: [{lang: 'en', content: 'Start'}],
+      slug:  [{lang: 'en', content: ''}], /* '/' */
       comments: false,
       layout: 'Start',
-      type: 'Page',
+      type: 'ArticleMain',
       content: [{lang: 'en', content: 'Start'}]
+    },
+    {
+      category: 'Main',
+      title: [{lang: 'en', content: 'About'}],
+      comments: false,
+      layout: 'Main',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: 'About'}]
+    },
+    {
+      category: 'Main',
+      title: [{lang: 'en', content: '404'}],
+      slug: [{lang: 'en', content: '404'}],
+      comments: false,
+      layout: 'Main',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: '404'}]
+    },
+    {
+      title: [{lang: 'en', content: '404'}],
+      slug: [{lang: 'en', content: '404'}],
+      comments: false,
+      layout: 'Main',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: '404'}]
+    },
+    {
+      title: [{lang: 'en', content: 'Admin'}],
+      slug: [{lang: 'en', content: 'admin'}],
+      comments: false,
+      layout: 'AdminMain',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: 'Admin main'}]
     }
   ]);
 

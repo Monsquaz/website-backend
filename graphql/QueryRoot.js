@@ -529,7 +529,7 @@ export default new GraphQLObjectType({
 
         // We can fetch page if it's published or we have "edit" on it.
         wheres.push(db.knex.raw(
-          `(${pagesTable}.publish_date < ? AND (${pagesTable}.unpublish_date = 0 OR ${pagesTable}.unpublish_date > ?)
+          `(${pagesTable}.publish_date < ? AND (${pagesTable}.unpublish_date IS NULL OR ${pagesTable}.unpublish_date > ?)
            OR ${Util.requireAction(userId, pagesTable, 'administrable_id', 'edit')})`,
           [db.knex.fn.now(), db.knex.fn.now()]
         ).toString());
