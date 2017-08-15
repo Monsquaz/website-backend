@@ -5,19 +5,7 @@ let insertViewType = async (knex, data) => {
 
   let ret = null;
 
-  let administrables = await knex('administrables')
-    .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
-    .where({
-      'content': 'View types',
-      'translations.lang': 'en'
-    })
-    .select('administrables.id');
-
-  if(administrables.length == 0) {
-    throw new Error(`Could not find View types administrable!`);
-  }
-
-  let parentAdministrableId = administrables[0].id;
+  let parentAdministrableId = await Util.getAdministrableByNameChain(['Root', 'Public', 'View types'], knex);
 
   let administrable_id = await Util.createAdministrable({
     parentAdministrableId,

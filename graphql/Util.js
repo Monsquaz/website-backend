@@ -38,6 +38,30 @@ const Util = {
     return _toTree(selection);
   },
 
+  // TODO: Move somewhere else. This is a Util function for seeds.
+  getAdministrableByNameChain: async (chain, knex) => {
+    knex = knex || db.knex;
+    let parentId = null;
+    for(let name of chain) {
+      let res;
+      if(parentId == null) {
+        // Not optimal. We assume unique name for Root.
+        res = await knex.raw(`SELECT a.id AS parentId
+                              FROM administrables AS a
+                              JOIN translations AS t ON t.translatable_id = a.name_translatable_id AND t.lang=?
+                              WHERE t.content = ?`, ['en', name]);
+      } else {
+        res = await knex.raw(`SELECT aa.descendant AS parentId
+                              FROM administrables_administrables AS aa
+                              JOIN administrables AS a ON a.id = aa.descendant
+                              JOIN translations AS t ON t.translatable_id = a.name_translatable_id AND t.lang=?
+                              WHERE aa.depth = 1 AND aa.ancestor = ? AND t.content = ?`, ['en', parentId, name]);
+      }
+      parentId = res[0][0].parentId;
+    }
+    return parentId;
+  },
+
   getInsertId: async (knex) => {
     knex = knex || db.knex;
     let res = await knex.raw('SELECT LAST_INSERT_ID() AS result');

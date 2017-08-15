@@ -51,19 +51,7 @@ let insertPage = async (knex, data) => {
     type_view_id = views[0].id;
   }
 
-  let administrables = await knex('administrables')
-    .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
-    .where({
-      'content': 'Pages',
-      'translations.lang': 'en'
-    })
-    .select('administrables.id');
-
-  if(administrables.length == 0) {
-    throw new Error(`Could not find Pages administrable!`);
-  }
-
-  let parentAdministrableId = administrables[0].id;
+  let parentAdministrableId = await Util.getAdministrableByNameChain(['Root', 'Public', 'Pages'], knex);
 
   let administrable_id = await Util.createAdministrable({
     parentAdministrableId,

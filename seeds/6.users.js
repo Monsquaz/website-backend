@@ -5,19 +5,7 @@ let insertUser = async (knex, data) => {
 
   let ret = null;
 
-  let administrables = await knex('administrables')
-    .innerJoin('translations', 'administrables.name_translatable_id', 'translations.translatable_id')
-    .where({
-      'content': 'Users',
-      'translations.lang': 'en'
-    })
-    .select('administrables.id');
-
-  if(administrables.length == 0) {
-    throw new Error(`Could not find Users administrable!`);
-  }
-
-  let parentAdministrableId = administrables[0].id;
+  let parentAdministrableId = await Util.getAdministrableByNameChain(['Root', 'Public', 'Users'], knex);
 
   let administrable_id = await Util.createAdministrable({
     parentAdministrableId,
