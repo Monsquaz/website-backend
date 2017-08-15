@@ -20,6 +20,7 @@ exports.seed = async function(knex, Promise) {
   await addDefaultPermission('read', ['Root', 'Public', 'Pages']);
   await addDefaultPermission('read', ['Root', 'Public', 'Categories']);
   await addDefaultPermission('read', ['Root', 'Public', 'Users']);
+  await addDefaultPermission('createUser', ['Root', 'Public', 'Users']);
   await addDefaultPermission('read', ['Root', 'Public', 'Usergroups']);
   await addDefaultPermission('read', ['Root', 'Public', 'View types']);
   await addDefaultPermission('read', ['Root', 'Public', 'Views']);
