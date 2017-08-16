@@ -10,7 +10,6 @@ import {
 import db from '../db';
 import Translation from './Translation';
 import Util from './Util';
-
 import Category from './Category';
 import Tag from './Tag';
 import PagePath from './PagePath';
@@ -74,7 +73,9 @@ const Page = new GraphQLObjectType({
        },
        sqlJoin: (pagesTable, pathsTable, args) => {
          let joins = [`${pagesTable}.id = ${pathsTable}.page_id`];
-         if(args.lang) joins.push(db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString());
+         if(args.lang) {
+           joins.push(db.knex.raw(` AND ${translationsTable}.lang = ?`, args.lang).toString());
+         }
          return joins.join(' AND ');
        }
      },
@@ -99,11 +100,11 @@ const Page = new GraphQLObjectType({
        sqlJoin: (thisTable, otherTable, args) =>
          `${thisTable}.type_view_id = ${otherTable}.id`
      },
-     slug: Util.translationField('slug_translatable_id'),
-     title: Util.translationField('title_translatable_id'),
-     content: Util.translationField('content_translatable_id'),
+     slug:          Util.translationField('slug_translatable_id'),
+     title:         Util.translationField('title_translatable_id'),
+     content:       Util.translationField('content_translatable_id'),
      administrable: Util.administrableField('administrable_id'),
-     _actions: Util.actionsField('administrable_id')
+     _actions:      Util.actionsField('administrable_id')
    })
  });
 

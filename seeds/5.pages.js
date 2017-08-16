@@ -105,15 +105,6 @@ exports.seed = async function(knex, Promise) {
       content: [{lang: 'en', content: 'About'}]
     },
     {
-      category: 'Main',
-      title: [{lang: 'en', content: '404'}],
-      slug: [{lang: 'en', content: '404'}],
-      comments: false,
-      layout: 'Main',
-      type: 'ArticleMain',
-      content: [{lang: 'en', content: '404'}]
-    },
-    {
       title: [{lang: 'en', content: '404'}],
       slug: [{lang: 'en', content: '404'}],
       comments: false,

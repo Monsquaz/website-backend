@@ -2,16 +2,16 @@
 exports.up = function(knex, Promise) {
   return knex.schema.raw(`CREATE VIEW pages_paths AS
     SELECT p.id AS page_id, IF(
-      NOW() < DATE_ADD(p.publish_date, INTERVAL 30 DAY),
+      ct.content IS NULL OR NOW() < DATE_ADD(p.publish_date, INTERVAL 30 DAY),
       CONCAT(
         '/',
-        IF(pt.content, pt.content, p.id)
+        IF(pt.content IS NOT NULL, pt.content, p.id)
       ),
       CONCAT(
         '/',
-        IF(ct.content, ct.content, c.id),
+        IF(ct.content IS NOT NULL, ct.content, c.id),
         '/',
-        IF(pt.content, pt.content, p.id)
+        IF(pt.content IS NOT NULL, pt.content, p.id)
       )
     ) AS path, pt.lang FROM pages AS p
     LEFT JOIN translations AS pt ON pt.translatable_id = p.slug_translatable_id

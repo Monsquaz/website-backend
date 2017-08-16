@@ -9,7 +9,7 @@ let insertViewType = async (knex, data) => {
 
   let administrable_id = await Util.createAdministrable({
     parentAdministrableId,
-    nameTranslations: Util.inAllLanguages(data.component)
+    nameTranslations: data.name
   }, knex);
 
   let insertData = {
@@ -37,87 +37,87 @@ exports.seed = async function(knex, Promise) {
       /* TODO: 2-3 menyer. ev. bildspel, footer-info? */
       schema: {},
       schemaForm: [],
-      component: 'Overview',
+      component: 'overview-layout',
     },
     {
       /* TODO: ?. Somehow make it possible to specify full-width jumbotrons via shortcode in content */
       name: [{lang: 'en', content: 'Showcase'}],
       schema: {},
       schemaForm: [],
-      component: 'Showcase',
+      component: 'showcase-layout',
     },
     {
       name: [{lang: 'en', content: 'Documentation'}],
       schema: {},
       schemaForm: [],
-      component: 'Documentation',
+      component: 'documentation-layout',
     },
     {
       name: [{lang: 'en', content: 'Forum'}],
       schema: {},
       schemaForm: [],
-      component: 'Forum',
+      component: 'forum-layout',
     },
     {
       name: [{lang: 'en', content: 'Blog'}],
       schema: {},
       schemaForm: [],
-      component: 'Blog',
+      component: 'blog-layout',
     },
     {
       name: [{lang: 'en', content: 'Admin'}],
       schema: {},
       schemaForm: [],
-      component: 'Admin',
+      component: 'admin-layout',
     },
     /* Types */
     {
       name: [{lang: 'en', content: 'Article'}],
       schema: {},
       schemaForm: [],
-      component: 'Article',
+      component: 'article-type',
     },
     {
       name: [{lang: 'en', content: 'Category'}],
       schema: {},
       schemaForm: [],
-      component: 'Category',
+      component: 'category-type',
     },
     {
       name: [{lang: 'en', content: 'Video'}],
       schema: {},
       schemaForm: [],
-      component: 'Video',
+      component: 'video-type',
     },
     {
       name: [{lang: 'en', content: 'Music'}],
       schema: {},
       schemaForm: [],
-      component: 'Music',
+      component: 'music-type',
     },
     {
       name: [{lang: 'en', content: 'FileList'}],
       schema: {},
       schemaForm: [],
-      component: 'FileList',
+      component: 'file-list-type',
     },
     {
       name: [{lang: 'en', content: 'File'}],
       schema: {},
       schemaForm: [],
-      component: 'File',
+      component: 'file-type',
     },
     {
       name: [{lang: 'en', content: 'User'}],
       schema: {},
       schemaForm: [],
-      component: 'User',
+      component: 'user-type',
     },
     {
       name: [{lang: 'en', content: 'Editor'}],
       schema: {},
       schemaForm: [],
-      component: 'Editor',
+      component: 'editor-type',
     }
   ], knex);
 };
