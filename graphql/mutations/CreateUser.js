@@ -43,7 +43,7 @@ const CreateUser = {
           firstname:             {type: new GraphQLNonNull(GraphQLString)},
           lastname:              {type: new GraphQLNonNull(GraphQLString)},
           password:              {type: new GraphQLNonNull(GraphQLString)},
-          parentAdministrableId: {type: GraphQLInt}
+          parentAdministrableId: {type: new GraphQLNonNull(GraphQLInt)}
         })
       })
     }

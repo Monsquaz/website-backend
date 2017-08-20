@@ -16,6 +16,7 @@ import PagePath from './PagePath';
 import MenuItem from './MenuItem';
 import View from './View';
 import User from './User';
+import CategoriesTree from './CategoriesTree';
 
 /*
   TODO: author should have a type like:
@@ -46,6 +47,12 @@ const Page = new GraphQLObjectType({
            (junctionTable, tagsTable, args)  => `${junctionTable}.tag_id = ${tagsTable}.id`
          ]
        }
+     },
+     categoriesBreadcrumbs: {
+       type: new GraphQLList(CategoriesTree),
+       sqlTable: 'categories_categories',
+       sqlJoin: (pagesTable, categoriesTreeTable, args) =>
+         `${pagesTable}.category_id = ${categoriesTreeTable}.descendant`
      },
      canonical: {
        type: Page,

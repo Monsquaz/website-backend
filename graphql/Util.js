@@ -459,6 +459,33 @@ const Util = {
     return administrableId;
   },
 
+  createCategory: async (params, knex) => {
+    knex = knex || db.knex;
+    let categoryId;
+    await knex.transaction(async (t) => {
+      let insertData = {
+        title_translatable_id: await Util.createTranslatable(params.title, t),
+        slug_translatable_id:  await Util.createTranslatable(params.slug, t),
+        administrable_id:      params.administrableId
+      };
+      await t('categories').insert(insertData);
+      categoryId = await Util.getInsertId(t);
+      await t.raw(`
+        INSERT INTO categories_categories (depth, ancestor, descendant)
+          SELECT depth+1, ancestor, ? FROM categories_categories
+          WHERE descendant = ?
+          UNION ALL SELECT 0, ?, ?
+      `, [
+        categoryId,
+        params.parentCategoryId || null,
+        categoryId,
+        categoryId
+      ]);
+      console.warn('AFTER INSERT TREE');
+    });
+    return categoryId;
+  },
+
   hasActionOnAdministrable: async (userId, administrableId,  action, knex) => {
     knex = knex || db.knex;
     let res = await knex.raw(`SELECT COUNT(*) > 0 AS result

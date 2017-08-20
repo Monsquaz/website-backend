@@ -3,39 +3,32 @@ import Util from '../graphql/Util';
 // Doesn't have to be optimized at all. It's a seed.
 let insertCategory = async (knex, data) => {
 
-  let ret = null;
+  let categoryId = null;
 
-  await knex.transaction(async (t) => {
+  if(!('title' in data)) {
+    throw new Error(`Title must be set`);
+  }
 
-    if(!('title' in data)) {
-      throw new Error(`Title must be set`);
-    }
+  if(!('slug' in data)) {
+    data.slug = data.title.map((e) => {
+      return {...e, content: Util.slugify(e.content)};
+    });
+  }
 
-    if(!('slug' in data)) {
-      data.slug = data.title.map((e) => {
-        return {...e, content: Util.slugify(e.content)};
-      });
-    }
+  let parentAdministrableId = await Util.getAdministrableByNameChain(['Root', 'Public', 'Categories'], knex);
 
-    let parentAdministrableId = await Util.getAdministrableByNameChain(['Root', 'Public', 'Categories'], knex);
+  let administrableId = await Util.createAdministrable({
+    parentAdministrableId,
+    nameTranslations: data.title
+  }, knex);
 
-    let administrable_id = await Util.createAdministrable({
-      parentAdministrableId,
-      nameTranslations: data.title
-    }, t);
-
-    let insertData = {
-      title_translatable_id: await Util.createTranslatable(data.title, t),
-      slug_translatable_id:  await Util.createTranslatable(data.slug, t),
-      administrable_id
-    };
-
-    ret = await t('categories').insert(insertData);
-
+  categoryId = await Util.createCategory({
+    title: data.title,
+    slug: data.slug,
+    administrableId
   });
 
-  return ret;
-
+  return categoryId;
 }
 
 let insertCategories = async (datas, knex) => {

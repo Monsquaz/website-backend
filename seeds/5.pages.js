@@ -98,6 +98,22 @@ exports.seed = async function(knex, Promise) {
     },
     {
       category: 'Main',
+      title: [{lang: 'en', content: 'Login'}],
+      comments: false,
+      layout: 'SingleUserAction',
+      type: 'LoginMain',
+      content: [{lang: 'en', content: 'User login'}]
+    },
+    {
+      category: 'Main',
+      title: [{lang: 'en', content: 'Register'}],
+      comments: false,
+      layout: 'SingleUserAction',
+      type: 'RegisterMain',
+      content: [{lang: 'en', content: 'User registration'}]
+    },
+    {
+      category: 'Main',
       title: [{lang: 'en', content: 'About'}],
       comments: false,
       layout: 'Main',

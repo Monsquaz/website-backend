@@ -56,6 +56,11 @@ exports.seed = async function(knex, Promise) {
       viewType: 'Overview',
     },
     {
+      name: [{lang: 'en', content: 'SingleUserAction'}],
+      data: {},
+      viewType: 'Overview',
+    },
+    {
       name: [{lang: 'en', content: 'AdminMain'}],
       data: {},
       viewType: 'Admin',
@@ -66,5 +71,15 @@ exports.seed = async function(knex, Promise) {
       data: {},
       viewType: 'Article',
     },
+    {
+      name: [{lang: 'en', content: 'LoginMain'}],
+      data: {},
+      viewType: 'UserLogin',
+    },
+    {
+      name: [{lang: 'en', content: 'RegisterMain'}],
+      data: {},
+      viewType: 'UserRegistration',
+    }
   ], knex);
 };

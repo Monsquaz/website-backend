@@ -18,6 +18,9 @@ const AdministrablesTree = new GraphQLObjectType({
      id: {
        type: GraphQLInt
      },
+     depth: {
+       type: GraphQLInt
+     },
      ancestor: Util.administrableField('ancestor'),
      descendant: Util.administrableField('descendant')
    })
