@@ -121,6 +121,24 @@ exports.seed = async function(knex, Promise) {
       content: [{lang: 'en', content: 'About'}]
     },
     {
+      category: 'Main',
+      title: [{lang: 'en', content: 'Privacy policy'}],
+      slug: [{lang: 'en', content: 'privacy-policy'}],
+      comments: false,
+      layout: 'Main',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: 'Privacy policy. Because there has to be one.'}]
+    },
+    {
+      category: 'Main',
+      title: [{lang: 'en', content: 'Disclaimer'}],
+      slug: [{lang: 'en', content: 'disclaimer'}],
+      comments: false,
+      layout: 'Main',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: 'Enter at your own risk.'}]
+    },
+    {
       title: [{lang: 'en', content: '404'}],
       slug: [{lang: 'en', content: '404'}],
       comments: false,
@@ -135,6 +153,14 @@ exports.seed = async function(knex, Promise) {
       layout: 'AdminMain',
       type: 'ArticleMain',
       content: [{lang: 'en', content: 'Admin main'}]
+    },
+    {
+      title: [{lang: 'en', content: 'Profile'}],
+      slug: [{lang: 'en', content: 'profile'}],
+      comments: false,
+      layout: 'AdminMain',
+      type: 'UserProfileMain',
+      content: [{lang: 'en', content: 'User profile'}]
     }
   ]);
 

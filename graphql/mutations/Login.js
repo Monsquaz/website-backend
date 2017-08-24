@@ -11,7 +11,7 @@ import Util from '../Util';
 import passwordHash from 'password-hash';
 import db from '../../db';
 import jwt from 'jsonwebtoken';
-import {jwtSecret} from '../../config'
+import { jwtSecret } from '../../config'
 
 const login = {
   type: new GraphQLObjectType({

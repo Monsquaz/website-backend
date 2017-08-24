@@ -481,7 +481,6 @@ const Util = {
         categoryId,
         categoryId
       ]);
-      console.warn('AFTER INSERT TREE');
     });
     return categoryId;
   },

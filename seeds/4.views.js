@@ -80,6 +80,11 @@ exports.seed = async function(knex, Promise) {
       name: [{lang: 'en', content: 'RegisterMain'}],
       data: {},
       viewType: 'UserRegistration',
+    },
+    {
+      name: [{lang: 'en', content: 'UserProfileMain'}],
+      data: {},
+      viewType: 'UserProfile',
     }
   ], knex);
 };

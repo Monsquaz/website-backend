@@ -25,6 +25,20 @@ export default new GraphQLObjectType({
      name: {
        type: GraphQLString
      },
+     email: {
+       type: GraphQLString // TODO: Not public!
+     },
+     gravatar: {
+       type: GraphQLString ,
+       sqlExpr: table =>
+         `CONCAT('https://www.gravatar.com/avatar/',MD5(LOWER(TRIM(${table}.email))))`
+     },
+     firstname: {
+       type: GraphQLString // TODO: Not public?
+     },
+     lastname: {
+       type: GraphQLString // TODO: Not public?
+     },
      administrable: Util.administrableField('administrable_id'),
      _actions: Util.actionsField('administrable_id'),
      combinedActions: {
