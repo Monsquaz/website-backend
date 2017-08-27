@@ -32,11 +32,18 @@ exports.seed = async function(knex, Promise) {
     'users_usergroups'
   ];
 
-  await knex.raw('SET foreign_key_checks = 0;');
+  knex.transaction(async function(trx) {
+    await knex.raw('SET FOREIGN_KEY_CHECKS=0').transacting(trx);
+    for(let tableName of tableNames) {
+      await knex(tableName).delete().transacting(trx);
+    }
+    await knex.raw('SET FOREIGN_KEY_CHECKS=1').transacting(trx);
+    await trx.commit();
+  });
+
   for(let tableName of tableNames) {
-    await knex(tableName).delete();
     await knex.raw(`ALTER TABLE ${tableName} AUTO_INCREMENT = 1`);
   }
-  return knex.raw('SET foreign_key_checks = 1;');
+  return Promise.all([]);
 
 };
