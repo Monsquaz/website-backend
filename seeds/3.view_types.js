@@ -65,7 +65,7 @@ exports.seed = async function(knex, Promise) {
       component: 'blog-layout',
     },
     {
-      name: [{lang: 'en', content: 'Admin'}],
+      name: [{lang: 'en', content: 'AdminLayout'}],
       schema: {},
       schemaForm: [],
       component: 'admin-layout',
@@ -76,6 +76,12 @@ exports.seed = async function(knex, Promise) {
       schema: {},
       schemaForm: [],
       component: 'article-type',
+    },
+    {
+      name: [{lang: 'en', content: 'FAQ'}],
+      schema: {},
+      schemaForm: [],
+      component: 'faq',
     },
     {
       name: [{lang: 'en', content: 'Category'}],
@@ -136,6 +142,12 @@ exports.seed = async function(knex, Promise) {
       schema: {},
       schemaForm: [],
       component: 'user-profile',
+    },
+    {
+      name: [{lang: 'en', content: 'AdminType'}],
+      schema: {},
+      schemaForm: [],
+      component: 'admin-browser',
     }
   ], knex);
 };

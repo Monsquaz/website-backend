@@ -115,6 +115,7 @@ exports.seed = async function(knex, Promise) {
     {
       category: 'Main',
       title: [{lang: 'en', content: 'About'}],
+      slug: [{lang: 'en', content: 'about'}],
       comments: false,
       layout: 'Main',
       type: 'ArticleMain',
@@ -139,6 +140,24 @@ exports.seed = async function(knex, Promise) {
       content: [{lang: 'en', content: 'Enter at your own risk.'}]
     },
     {
+      category: 'Main',
+      title: [{lang: 'en', content: 'FAQ'}],
+      slug: [{lang: 'en', content: 'faq'}],
+      comments: false,
+      layout: 'Main',
+      type: 'FAQMain',
+      content: [{lang: 'en', content: 'FAQ.'}]
+    },
+    {
+      category: 'Main',
+      title: [{lang: 'en', content: 'Community'}],
+      slug: [{lang: 'en', content: 'community'}],
+      comments: false,
+      layout: 'Main',
+      type: 'ArticleMain',
+      content: [{lang: 'en', content: 'Community.'}]
+    },
+    {
       title: [{lang: 'en', content: '404'}],
       slug: [{lang: 'en', content: '404'}],
       comments: false,
@@ -150,7 +169,7 @@ exports.seed = async function(knex, Promise) {
       title: [{lang: 'en', content: 'Admin'}],
       slug: [{lang: 'en', content: 'admin'}],
       comments: false,
-      layout: 'AdminMain',
+      layout: 'AdminLayoutMain',
       type: 'ArticleMain',
       content: [{lang: 'en', content: 'Admin main'}]
     },
@@ -158,7 +177,7 @@ exports.seed = async function(knex, Promise) {
       title: [{lang: 'en', content: 'Profile'}],
       slug: [{lang: 'en', content: 'profile'}],
       comments: false,
-      layout: 'AdminMain',
+      layout: 'AdminLayoutMain',
       type: 'UserProfileMain',
       content: [{lang: 'en', content: 'User profile'}]
     }
