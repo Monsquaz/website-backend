@@ -79,7 +79,7 @@ const Util = {
   },
 
   isInt: (v) => {
-    return typeof v === 'number' && (v % 1) === 0;
+    return String(Math.floor(Number(v))) === v;
   },
 
   isValidSlug: (str) => {
