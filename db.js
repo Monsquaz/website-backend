@@ -6,7 +6,7 @@ let db = knex(knexConfig[environment]);
 
 export default {
   call: (sql) => {
-    console.log(sql);
+    //console.log(sql);
     return new Promise((resolve, reject) => {
       db.raw(sql).then((r) => {
         resolve(r[0]);
