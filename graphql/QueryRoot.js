@@ -42,8 +42,8 @@ export default new GraphQLObjectType({
       },
       where: (actionsTable, args, context) => {
         let wheres = [];
-        if(args.id)   wheres.push(db.knex.raw(`${actionsTable}.id = ?`, args.id));
-        if(args.name) wheres.push(db.knex.raw(`${actionsTable}.name = ?`, args.name));
+        if('id' in args)   wheres.push(db.knex.raw(`${actionsTable}.id = ?`, args.id));
+        if('name' in args) wheres.push(db.knex.raw(`${actionsTable}.name = ?`, args.name));
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
@@ -63,7 +63,7 @@ export default new GraphQLObjectType({
       },
       where: (menusTable, args, { userId }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${menusTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${menusTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -98,7 +98,7 @@ export default new GraphQLObjectType({
         let wheres = [
           'depth = 1'
         ];
-        if(args.id) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.menuId));
+        if('id' in args) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.menuId));
 
         let userIdChecks = ['acl.user_id = 1']; // Guest
         if(userId) userIdChecks.push(db.knex.raw(`acl.user_id = ?`, userId).toString());
@@ -114,14 +114,14 @@ export default new GraphQLObjectType({
           throw new GraphQLError(`Not allowed to read menu with id ${args.menuId}`);
         }
 
-        if(args.depth && !args.rootId) {
+        if('depth' in args && !('rootId' in args)) {
           throw new GraphQLError('depth argument requires rootId argument');
         }
 
-        if(args.rootId) {
+        if('rootId' in args) {
           wheres.push(db.knex.raw(
             `${treeTable}.ancestor IN (SELECT descendant FROM administrables_administrables WHERE ancestor = ?)`, [args.rootId]).toString());
-          if(args.maxDepth) {
+          if('maxDepth' in args) {
             wheres.push(db.knex.raw(
               `${treeTable}.descendant NOT IN (SELECT descendant FROM administrables_administrables WHERE depth > ?)`, [args.maxDepth]).toString());
           }
@@ -145,6 +145,15 @@ export default new GraphQLObjectType({
         rootId: {
           type: GraphQLInt
         },
+        ancestorId: {
+          type: GraphQLInt
+        },
+        descendantId: {
+          type: GraphQLInt
+        },
+        depth: {
+          type: GraphQLInt
+        },
         maxDepth: {
           type: GraphQLInt
         },
@@ -155,19 +164,30 @@ export default new GraphQLObjectType({
           `${treeTable}.depth = 1`
         ];
 
-        if(args.id) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${treeTable}.id = ?`, args.id));
 
-        if(args.depth && !args.rootId) {
+        if('depth' in args && !('rootId' in args)) {
           throw new GraphQLError('depth argument requires rootId argument');
         }
 
-        if(args.rootId) {
+        if('ancestorId' in args) {
+          wheres.push(db.knex.raw(
+            `${treeTable}.ancestor = ?`, [args.ancestorId]).toString());
+        }
+
+        if('descendantId' in args) {
+          wheres.push(db.knex.raw(
+            `${treeTable}.descendant = ?`, [args.descendantId]).toString());
+        }
+
+        if('rootId' in args) {
           wheres.push(db.knex.raw(
             `${treeTable}.ancestor IN (SELECT descendant FROM administrables_administrables WHERE ancestor = ?)`, [args.rootId]).toString());
-          if(args.maxDepth) {
-            wheres.push(db.knex.raw(
-              `${treeTable}.descendant NOT IN (SELECT descendant FROM administrables_administrables WHERE depth > ?)`, [args.maxDepth]).toString());
-          }
+        }
+
+        if('maxDepth' in args) {
+          wheres.push(db.knex.raw(
+            `${treeTable}.descendant NOT IN (SELECT descendant FROM administrables_administrables WHERE depth > ?)`, [args.maxDepth]).toString());
         }
 
         Util.handleActionArguments({
@@ -198,7 +218,7 @@ export default new GraphQLObjectType({
       },
       where: (administrablesTable, args, { userId }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${administrablesTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${administrablesTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -226,7 +246,7 @@ export default new GraphQLObjectType({
       },
       where: (usersTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${usersTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${usersTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -257,7 +277,7 @@ export default new GraphQLObjectType({
       },
       where: (usergroupsTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${usergroupsTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${usergroupsTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -287,7 +307,7 @@ export default new GraphQLObjectType({
       },
       where: (tagsTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${tagsTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${tagsTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -317,7 +337,7 @@ export default new GraphQLObjectType({
       },
       where: (eventlistenersTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${eventlistenersTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${eventlistenersTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -347,7 +367,7 @@ export default new GraphQLObjectType({
       },
       where: (messageTypesTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${messageTypesTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${messageTypesTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -385,7 +405,7 @@ export default new GraphQLObjectType({
       },
       where: (messagesTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${messagesTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${messagesTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -415,7 +435,7 @@ export default new GraphQLObjectType({
       },
       where: (categoriesTable, args, { userId, askedFor }) => {
         let wheres = [];
-        if(args.id) wheres.push(db.knex.raw(`${categoriesTable}.id = ?`, args.id));
+        if('id' in args) wheres.push(db.knex.raw(`${categoriesTable}.id = ?`, args.id));
         Util.handleActionArguments({
           args,
           required:   ['read'],
@@ -472,11 +492,14 @@ export default new GraphQLObjectType({
           }
           let parts = args.path.split('/').slice(1);
 
+          console.warn('PARTS', parts);
+
           switch(parts.length) {
             case 1:
-              if(Util.isInt(parts[0])) {
-                args.id = arts[0];
-              } else {
+            console.warn('parts0', parts[0]);
+              if(Util.isInt(parts[0])) {console.warn('was int')
+                args.id = parts[0];
+              } else {console.warn('was NOT int')
                 args.slug = parts[0];
               }
               break;
@@ -495,6 +518,8 @@ export default new GraphQLObjectType({
               wheres.push('false');
           }
         }
+
+        console.warn('ARGS!', args)
 
         if('id' in args) {
           wheres.push(db.knex.raw(`${pagesTable}.id = ?`, args.id).toString());
