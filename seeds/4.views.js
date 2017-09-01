@@ -63,6 +63,10 @@ exports.seed = async function(knex, Promise) {
         ],
         centerComponents: [
           {
+            type: 'page-teasers',
+            data: {}
+          },
+          {
             type: 'blurbs',
             data: {
               blurbs: [
@@ -163,6 +167,11 @@ exports.seed = async function(knex, Promise) {
     /* Types*/
     {
       name: [{lang: 'en', content: 'ArticleMain'}],
+      data: {},
+      viewType: 'Article',
+    },
+    {
+      name: [{lang: 'en', content: 'SearchMain'}],
       data: {},
       viewType: 'Article',
     },

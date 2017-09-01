@@ -42,7 +42,7 @@ exports.seed = async function(knex, Promise) {
   });
 
   for(let tableName of tableNames) {
-    await knex.raw(`ALTER TABLE ${tableName} AUTO_INCREMENT = 1`);
+    await knex.raw(`ALTER TABLE ${tableName} AUTO_INCREMENT =1`);
   }
   return Promise.all([]);
 

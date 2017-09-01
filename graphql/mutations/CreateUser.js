@@ -96,8 +96,8 @@ const CreateUser = {
         {
           tableName: 'users',
           where: { email: input.name },
-          errorMessage: 'There is already a user registered with that name..'
-        },
+          errorMessage: 'There is already a user registered with that name.'
+        }
       ], t);
 
       let administrableId = await Util.createAdministrable({

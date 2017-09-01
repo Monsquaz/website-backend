@@ -16,6 +16,7 @@ import PagePath from './PagePath';
 import MenuItem from './MenuItem';
 import View from './View';
 import User from './User';
+import PageImage from './PageImage';
 import CategoriesTree from './CategoriesTree';
 
 /*
@@ -60,6 +61,12 @@ const Page = new GraphQLObjectType({
        sqlJoin: (thisTable, otherTable, args) =>
          `${thisTable}.canonical_page_id = ${otherTable}.id`
      },
+     author: {
+       type: User,
+       sqlTable: 'users',
+       sqlJoin: (thisTable, otherTable, args) =>
+         `${thisTable}.user_id = ${otherTable}.id`
+     },
      publishDate: {
        // TODO: Should be hidden unless user has "edit" on the page.
        type: GraphQLString,
@@ -69,6 +76,23 @@ const Page = new GraphQLObjectType({
        // TODO: Should be hidden unless user has "edit" on the page.
        type: GraphQLString,
        sqlColumn: 'unpublish_date'
+     },
+     images: {
+       type: new GraphQLList(PageImage),
+       sqlTable: 'page_images',
+       args: {},
+       sqlJoin: (thisTable, otherTable, args) => {
+         return `${thisTable}.id = ${otherTable}.page_id`;
+       }
+     },
+     relatedByCategory: {
+       type: new GraphQLList(Page),
+       sqlTable: 'pages',
+       args: {},
+       sqlJoin: (thisTable, otherTable, args) => {
+         return `${thisTable}.category_id = ${otherTable}.category_id
+                 AND ${otherTable}.id != ${thisTable}.id`;
+       }
      },
      paths: {
        type: new GraphQLList(PagePath),
@@ -110,6 +134,7 @@ const Page = new GraphQLObjectType({
      slug:          Util.translationField('slug_translatable_id'),
      title:         Util.translationField('title_translatable_id'),
      content:       Util.translationField('content_translatable_id'),
+     teaser:        Util.translationField('teaser_translatable_id'),
      administrable: Util.administrableField('administrable_id'),
      _actions:      Util.actionsField('administrable_id')
    })

@@ -492,14 +492,12 @@ export default new GraphQLObjectType({
           }
           let parts = args.path.split('/').slice(1);
 
-          console.warn('PARTS', parts);
-
           switch(parts.length) {
             case 1:
             console.warn('parts0', parts[0]);
-              if(Util.isInt(parts[0])) {console.warn('was int')
+              if(Util.isInt(parts[0])) {
                 args.id = parts[0];
-              } else {console.warn('was NOT int')
+              } else {
                 args.slug = parts[0];
               }
               break;

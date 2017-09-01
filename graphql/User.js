@@ -12,6 +12,7 @@ import Util from './Util';
 import AclCombined from './AclCombined';
 import AclUser from './AclUser';
 import Usergroup from './Usergroup';
+import Page from './Page';
 
 export default new GraphQLObjectType({
    description: 'A user',
@@ -27,6 +28,14 @@ export default new GraphQLObjectType({
      },
      email: {
        type: GraphQLString // TODO: Not public!
+     },
+     page: {
+       type: Page,
+       sqlTable: 'pages',
+       args: {},
+       sqlJoin: (thisTable, otherTable, args) => {
+         return `${thisTable}.page_id = ${otherTable}.id`;
+       }
      },
      gravatar: {
        type: GraphQLString ,

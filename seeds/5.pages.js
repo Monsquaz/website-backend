@@ -64,10 +64,20 @@ let insertPage = async (knex, data) => {
     });
   }
 
+  if(!('teaser' in data)) {
+    let maxlength = 100;
+    data.teaser = data.content.map((e) => {
+      return { ...e, teaser: ( e.content.length > maxlength
+                               ? (e.content.substring(0, maxlength-3) + '...')
+                               : e.content ) };
+    });
+  }
+
   let insertData = {
     category_id,
-    slug_translatable_id:  await Util.createTranslatable(data.slug, knex),
-    title_translatable_id: await Util.createTranslatable(data.title, knex),
+    slug_translatable_id:   await Util.createTranslatable(data.slug,  knex),
+    title_translatable_id:  await Util.createTranslatable(data.title, knex),
+    teaser_translatable_id: await Util.createTranslatable(data.title, knex),
     comments: !!data.comments,
     layout_view_id,
     type_view_id,
@@ -147,6 +157,15 @@ exports.seed = async function(knex, Promise) {
       layout: 'Main',
       type: 'FAQMain',
       content: [{lang: 'en', content: 'FAQ.'}]
+    },
+    {
+      category: 'Main',
+      title: [{lang: 'en', content: 'Search'}],
+      slug: [{lang: 'en', content: 'search'}],
+      comments: false,
+      layout: 'Main',
+      type: 'SearchMain',
+      content: [{lang: 'en', content: 'Search'}]
     },
     {
       category: 'Main',
