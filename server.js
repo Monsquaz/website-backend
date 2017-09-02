@@ -37,11 +37,10 @@ router.post('/graphql', koaConvert(graphqlHTTP( (request) => {
       var decoded = jwt.verify(token, jwtSecret);
       context = decoded;
     } catch(err) {
-      console.warn('Invalid token');
     }
   }
   return {
-    schema: schema,
+    schema,
     context,
     formatError: e => {
       console.error(e)

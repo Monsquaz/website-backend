@@ -47,7 +47,7 @@ export default new GraphQLObjectType({
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        return joinMonster(resolveInfo, context, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
@@ -75,7 +75,7 @@ export default new GraphQLObjectType({
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        return joinMonster(resolveInfo, context, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
@@ -130,7 +130,7 @@ export default new GraphQLObjectType({
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        return joinMonster(resolveInfo, context, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
@@ -202,7 +202,7 @@ export default new GraphQLObjectType({
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        return joinMonster(resolveInfo, context, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
@@ -217,6 +217,7 @@ export default new GraphQLObjectType({
         ...Util.actionArguments
       },
       where: (administrablesTable, args, { userId }) => {
+        console.warn('USERID!', userId);
         let wheres = [];
         if('id' in args) wheres.push(db.knex.raw(`${administrablesTable}.id = ?`, args.id));
         Util.handleActionArguments({
@@ -230,7 +231,7 @@ export default new GraphQLObjectType({
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        return joinMonster(resolveInfo, context, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }
@@ -517,8 +518,6 @@ export default new GraphQLObjectType({
           }
         }
 
-        console.warn('ARGS!', args)
-
         if('id' in args) {
           wheres.push(db.knex.raw(`${pagesTable}.id = ?`, args.id).toString());
         }
@@ -569,7 +568,7 @@ export default new GraphQLObjectType({
         return wheres.join(' AND ');
       },
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, {}, sql => {
+        return joinMonster(resolveInfo, context, sql => {
           return db.call(sql);
         }, { dialect: "mysql", minify: "true" })
       }

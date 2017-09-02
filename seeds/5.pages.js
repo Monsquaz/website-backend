@@ -189,7 +189,7 @@ exports.seed = async function(knex, Promise) {
       slug: [{lang: 'en', content: 'admin'}],
       comments: false,
       layout: 'AdminLayoutMain',
-      type: 'ArticleMain',
+      type: 'AdminTypeMain',
       content: [{lang: 'en', content: 'Admin main'}]
     },
     {

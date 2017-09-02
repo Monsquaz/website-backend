@@ -174,7 +174,7 @@ const Util = {
           What do we need to be allowed to do this => action "viewActions" on the administrable.
           It's OK to return empty list of actions if we lack the permission.
         */
-        if(userId) joinStr += ` OR ${derivedTable}.user_id = ${userId}`;
+        if(userId) joinStr += ` OR ${aclCombinedTable}.user_id = ${userId}`;
         joinStr += ')';
         return joinStr;
       }
